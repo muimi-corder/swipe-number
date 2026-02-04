@@ -1,199 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Swipe</title>
-
+<title>Hyper Stimulator</title>
 <style>
-  html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    background:#000;
-    color:#eaeaea;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow:hidden;
+  body {
+    margin: 0; padding: 0; height: 100vh;
+    background: #000; color: #fff;
+    font-family: 'Arial Black', sans-serif;
+    overflow: hidden; touch-action: none; /* ブラウザのデフォルトスワイプを無効化 */
   }
-
-  #app{
-    height:100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
+  #app {
+    height: 100%; display: flex;
+    justify-content: center; align-items: center;
+    position: relative; overflow: hidden;
   }
-
-  #count{
-    font-size:64px;
-    letter-spacing:1px;
-    user-select:none;
+  #count {
+    font-size: 80px; font-weight: 900;
+    z-index: 10; user-select: none;
+    text-shadow: 0 0 20px rgba(255,255,255,0.5);
   }
-
-  #hint{
-    position:fixed;
-    top:16px;
-    font-size:12px;
-    color:#555;
-    user-select:none;
+  .particle {
+    position: absolute; pointer-events: none;
+    border-radius: 50%; z-index: 5;
   }
-
-  #message{
-    position:fixed;
-    top:40%;
-    width:100%;
-    text-align:center;
-    font-size:16px;
-    color:#777;
-    opacity:0;
-    transition:opacity .25s;
-    pointer-events:none;
-    user-select:none;
+  #msg {
+    position: absolute; top: 20%; width: 100%;
+    text-align: center; font-size: 24px;
+    font-style: italic; opacity: 0; z-index: 15;
   }
-
-  footer{
-    position:fixed;
-    bottom:60px;
-    width:100%;
-    text-align:center;
-    font-size:12px;
-    color:#666;
+  /* ジャックポット演出用 */
+  @keyframes shake {
+    0% { transform: translate(0,0); }
+    25% { transform: translate(5px,5px) rotate(5deg); }
+    50% { transform: translate(-5px,-5px) rotate(-5deg); }
+    75% { transform: translate(5px,-5px) rotate(5deg); }
+    100% { transform: translate(0,0); }
   }
-  footer a{
-    color:#666;
-    margin:0 8px;
-    text-decoration:none;
-  }
-
-  #ad{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    height:60px;
-    background:#111;
-    color:#555;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:12px;
-    opacity:.4;
-  }
+  .jackpot-mode { animation: shake 0.1s infinite; background: #ff00ff !important; }
 </style>
 </head>
-
 <body>
+
 <div id="app">
-  <div id="hint">Swipe or Tap</div>
+  <div id="msg">JACKPOT!!</div>
   <div id="count">0</div>
 </div>
-
-<div id="message"></div>
-
-<!-- AdSense required navigation -->
-<footer>
-  <a href="about.html">About</a>
-  <a href="privacy.html">Privacy Policy</a>
-  <!-- ↓ 自分のGitHubプロフィールURLに置き換える -->
-  <a href="https://github.com/あなたのユーザー名">Contact</a>
-</footer>
-
-<!-- Ad placeholder (enable after approval) -->
-<div id="ad">Ad Space</div>
 
 <script>
 let count = 0;
 const countEl = document.getElementById("count");
-const msgEl = document.getElementById("message");
-let msgTimer = null;
-let lastAction = Date.now();
+const appEl = document.getElementById("app");
+const msgEl = document.getElementById("msg");
 
-/* exact messages */
-const exactMessages = {
-  1:"You started.",
-  2:"That happened.",
-  3:"Still here.",
-  4:"Nothing changed.",
-  5:"You kept going.",
-  6:"This is a thing now.",
-  7:"You did that.",
-  8:"Again.",
-  9:"Still nothing.",
-  10:"Okay.",
-  42:"That number meant something. Not here.",
-  69:"Nice. Still pointless.",
-  100:"You expected something, didn't you?",
-  333:"No reward is coming.",
-  777:"Lucky number. Same result.",
-  1000:"You spent time on this.",
-  10000:"Time converted to digits.",
-  100000:"This kept you here.",
-  1000000:"It kept going. So did you."
-};
+// パーティクル生成関数
+function createParticle(x, y, color, isBig = false) {
+  const p = document.createElement("div");
+  p.className = "particle";
+  const size = isBig ? Math.random() * 50 + 20 : Math.random() * 10 + 5;
+  p.style.width = `${size}px`;
+  p.style.height = `${size}px`;
+  p.style.background = color;
+  p.style.left = `${x}px`;
+  p.style.top = `${y}px`;
+  appEl.appendChild(p);
 
-/* generic pools */
-const generic = {
-  small:["This counts as progress.","No meaning added.","You noticed this."],
-  mid:["Nothing unlocked.","Still no purpose.","You stayed."],
-  large:["This feels familiar.","You are persistent.","It still works."],
-  huge:["Still no ending.","This is just a number.","You kept the pattern."]
-};
+  const angle = Math.random() * Math.PI * 2;
+  const velocity = isBig ? Math.random() * 20 + 10 : Math.random() * 10 + 5;
+  const vx = Math.cos(angle) * velocity;
+  const vy = Math.sin(angle) * velocity;
 
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-/* frequency control */
-function shouldShow(n){
-  if(n<=10) return true;
-  if(n<100) return n%10===0;
-  if(n<1000) return n%50===0;
-  if(n<10000) return n%100===0;
-  if(n<100000) return n%1000===0;
-  if(n<1000000) return n%10000===0;
-  return n===1000000;
+  p.animate([
+    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+    { transform: `translate(${vx * 50}px, ${vy * 50}px) scale(0)`, opacity: 0 }
+  ], { duration: 1000, easing: 'cubic-bezier(0, .9, .57, 1)' }).onfinish = () => p.remove();
 }
 
-function textFor(n){
-  if(exactMessages[n]) return exactMessages[n];
-  if(n<100) return pick(generic.small);
-  if(n<1000) return pick(generic.mid);
-  if(n<10000) return pick(generic.mid);
-  if(n<100000) return pick(generic.large);
-  if(n<1000000) return pick(generic.huge);
-  return "";
-}
-
-function showMessage(n){
-  if(!shouldShow(n)) return;
-  const t = textFor(n);
-  if(!t) return;
-  msgEl.textContent = t;
-  msgEl.style.opacity = 1;
-  clearTimeout(msgTimer);
-  msgTimer = setTimeout(()=>msgEl.style.opacity=0,1000);
-}
-
-/* increment */
-function increment(){
+function triggerEffect(e) {
   count++;
   countEl.textContent = count;
-  showMessage(count);
-  lastAction = Date.now();
+  
+  const x = e.clientX || (e.changedTouches ? e.changedTouches[0].clientX : window.innerWidth/2);
+  const y = e.clientY || (e.changedTouches ? e.changedTouches[0].clientY : window.innerHeight/2);
+  
+  const rand = Math.random();
+
+  // 1. 【超大当たり】1%の確率で画面が狂う
+  if (rand < 0.01) {
+    document.body.classList.add('jackpot-mode');
+    msgEl.style.opacity = 1;
+    for(let i=0; i<50; i++) createParticle(x, y, `hsl(${Math.random()*360}, 100%, 50%)`, true);
+    if(navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+    
+    setTimeout(() => {
+      document.body.classList.remove('jackpot-mode');
+      msgEl.style.opacity = 0;
+    }, 1000);
+
+  // 2. 【中当たり】10%の確率でスロー＆拡大
+  } else if (rand < 0.15) {
+    countEl.animate([
+      { transform: 'scale(1)', color: '#fff' },
+      { transform: 'scale(5)', color: '#0ff' },
+      { transform: 'scale(1)', color: '#fff' }
+    ], { duration: 300 });
+    for(let i=0; i<20; i++) createParticle(x, y, '#0ff');
+    if(navigator.vibrate) navigator.vibrate(40);
+
+  // 3. 【通常】
+  } else {
+    for(let i=0; i<5; i++) createParticle(x, y, '#555');
+    if(navigator.vibrate) navigator.vibrate(10);
+  }
 }
 
-/* tap & swipe */
-let sx=null, sy=null;
-document.addEventListener("pointerdown",e=>{ sx=e.clientX; sy=e.clientY; });
-document.addEventListener("pointerup",e=>{
-  if(sx===null) return;
-  const dx=Math.abs(e.clientX-sx), dy=Math.abs(e.clientY-sy);
-  increment();
-  sx=sy=null;
+// すべての入力をキャッチ（タップもスワイプ終了時も同様のトリガー）
+appEl.addEventListener("pointerup", (e) => {
+  triggerEffect(e);
 });
 
-/* ad visibility on idle */
-setInterval(()=>{
-  const ad=document.getElementById("ad");
-  ad.style.opacity = (Date.now()-lastAction>1500)?1:.4;
-},300);
+// マウスホイールや二本指操作での意図しないズームを防止
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
 </script>
 </body>
 </html>
