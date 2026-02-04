@@ -15,22 +15,25 @@
     
     #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: #ff3b30; width: 0%; z-index: 1000; }
     
+    /* 最終画面：最初は完全な暗黒 */
     #final-screen { 
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
       background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; 
       padding: 20px; text-align: center; box-sizing: border-box;
     }
     
-    #philosophy { font-size: 16px; line-height: 1.5; color: #777; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 60px; }
+    /* 哲学文のスタイリング */
+    #philosophy { font-size: 16px; line-height: 2.2; color: #777; font-weight: 300; letter-spacing: 0.1em; opacity: 0; transition: opacity 1.5s; }
+    .highlight { color: #aaa; }
     
-    #support-area { opacity: 0; transition: opacity 1.5s; display: flex; flex-direction: column; align-items: center; }
-    #support-note { font-size: 10px; color: #222; margin-bottom: 8px; }
-    .donate-btn { font-size: 11px; color: #444; text-decoration: underline; background: none; border: none; padding: 5px 10px; cursor: pointer; }
+    /* 支援エリア：最後に出現 */
+    #support-area { opacity: 0; transition: opacity 2s; margin-top: 50px; }
+    .donate-link { font-size: 10px; color: #333; text-decoration: none; letter-spacing: 0.05em; }
+    .donate-link:hover { color: #555; text-decoration: underline; }
 
     footer#header-links { position: absolute; bottom: 20px; font-size: 10px; opacity: 0.1; }
     #header-links a { color: #fff; text-decoration: none; margin: 0 10px; }
 
-    /* 報酬感を高めるための少し大きめのスケールアニメ */
     .tap-anim { animation: tap-pulse 0.06s cubic-bezier(0, 0, 0.2, 1); }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
   </style>
@@ -46,10 +49,9 @@
   </div>
 
   <div id="final-screen">
-    <div id="philosophy">終わりは突然で、大体はそんなものだ。</div>
+    <div id="philosophy"></div>
     <div id="support-area">
-      <div id="support-note">支援は任意です</div>
-      <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-btn">活動を支援する</a>
+      <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-link">支援は任意です</a>
     </div>
     <footer id="header-links">
       <a href="about.html">About</a>
@@ -59,7 +61,7 @@
   </div>
 
   <script>
-    const LOCK_KEY = "void_lock_high_response";
+    const LOCK_KEY = "void_eternal_archive";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null;
@@ -84,11 +86,8 @@
       const progress = Math.min(elapsed / DURATION, 1);
       document.getElementById("progress-bar").style.width = (progress * 100) + "%";
       
-      // 時間経過によるベース数値
       const baseValue = MAX_VAL * Math.pow(progress, 0.75);
-      // タップによる微増（報酬感の演出）
-      const bonusValue = tapCount * 2; 
-      
+      const bonusValue = tapCount * 2.5;
       const displayValue = Math.floor(Math.min(baseValue + bonusValue, MAX_VAL));
       document.getElementById("number").textContent = displayValue.toLocaleString();
       
@@ -97,20 +96,15 @@
 
     function handleTap() {
       if (isFinished) return;
-      
       tapCount++;
       if (!startTime) {
         startTime = Date.now();
-        setInterval(update, 30); // 更新頻度を上げてより滑らかに
+        setInterval(update, 30);
       }
-
-      // タップした瞬間に数値を更新（最速の報酬）
       update();
-
-      if (Math.random() < 0.2) {
+      if (Math.random() < 0.25) {
         document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
       }
-
       const numEl = document.getElementById("number");
       numEl.classList.remove("tap-anim");
       void numEl.offsetWidth;
@@ -120,8 +114,28 @@
     function finish(alreadyLocked = false) {
       isFinished = true;
       if (!alreadyLocked) localStorage.setItem(LOCK_KEY, "true");
-      document.getElementById("final-screen").style.display = "flex";
-      setTimeout(() => { document.getElementById("support-area").style.opacity = "1"; }, 2000);
+      
+      const finalScreen = document.getElementById("final-screen");
+      const phil = document.getElementById("philosophy");
+      finalScreen.style.display = "flex";
+
+      // 1. 暗転後 0.5秒後に第一文を表示
+      setTimeout(() => {
+        phil.style.opacity = "1";
+        phil.innerHTML = "追いかけた数字は幻だった。<br><br>確かなのは<br>ここで過ごした1分間。<br><br>熱を失った画面。<br>二度と開かない、この場所。";
+        
+        // 2. さらに一呼吸（2.5秒）置いて、「美しい虚無へ」を追加
+        setTimeout(() => {
+          phil.innerHTML += "<br><br><span class='highlight'>美しい虚無へ、ようこそ</span>";
+          
+          // 3. そのさらに2秒後に支援リンクを表示
+          setTimeout(() => {
+            document.getElementById("support-area").style.opacity = "1";
+          }, 2000);
+          
+        }, 2500); 
+
+      }, 500);
     }
 
     document.addEventListener("touchstart", (e) => { 
