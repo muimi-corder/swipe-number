@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Void Pulse</title>
+  
+  <title>Void Pulse - 1,000,000 Tap Challenge</title>
+  <meta property="og:title" content="Void Pulse - 1,000,000 Tap Challenge" />
+  <meta property="og:description" content="1,000,000回叩いた先に、何が見える？絶対にクリックしないでください。" />
+  <meta property="og:image" content="OGP画像URL(完成したらここに入れる)" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="あなたの本家URL(ここに貼る)" />
+
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
@@ -12,8 +20,11 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
     
+    /* 広告枠 */
     .ad-slot-top { width: 100%; height: 50px; background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: center; font-size: 8px; color: #222; z-index: 100; }
+    .ad-slot-bottom { width: 100%; height: 60px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; border-top: 1px solid #111; z-index: 100; font-size: 9px; color: #222; }
 
+    /* ランキング */
     #ranking-board {
       position: absolute; top: 60px; left: 15px; min-width: 200px;
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
@@ -21,14 +32,10 @@
       border-left: 2px solid #111; z-index: 5;
     }
     .rank-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 2px 4px; border-radius: 4px; }
-    .rank-item:first-child { 
-      background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 11px; 
-      border: 1px solid rgba(255, 255, 255, 0.1); animation: top-glow 3s infinite ease-in-out;
-    }
-    .rank-item:first-child .rank-name::before { content: "👑 "; opacity: 0.8; }
-    @keyframes top-glow { 0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.05); } 50% { box-shadow: 0 0 12px rgba(255,255,255,0.15); } }
+    .rank-item:first-child { background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 11px; border: 1px solid rgba(255, 255, 255, 0.1); animation: top-glow 3s infinite ease-in-out; }
     .rank-self { color: #00f5af !important; font-weight: bold; }
 
+    /* メイン表示 */
     #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; }
     #number { font-size: 90px; font-weight: 900; transition: color 0.1s; }
     #final-waste { font-size: 14px; color: #ff0000; font-weight: 900; margin-top: 15px; opacity: 0; letter-spacing: 1px; }
@@ -36,26 +43,26 @@
     .tap-anim { animation: tap-pulse 0.1s ease-out; }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
+    /* グリッチ・デッド演出 */
     .glitch-active { animation: glitch-dead 0.1s infinite !important; text-shadow: 2.5px 0 #fff, -2.5px 0 #ff0000; }
     @keyframes glitch-dead { 0% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 100% { transform: translate(1px, -1px); } }
     .dead-stable { color: #b8860b !important; opacity: 0.8; animation: none !important; }
     .dead-stable-text { color: #b8860b !important; opacity: 0.6; animation: none !important; }
 
+    /* 煽り */
     #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
     #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
     .show-msg { opacity: 1 !important; }
 
+    /* 自慢用オーバーレイ */
     #evidence-overlay {
-      position: absolute; bottom: 120px; width: auto; 
-      background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px;
-      display: flex; opacity: 0; transform: translateY(10px);
-      transition: opacity 0.5s, transform 0.5s;
+      position: absolute; bottom: 120px; background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px;
+      display: flex; opacity: 0; transform: translateY(10px); transition: opacity 0.5s, transform 0.5s;
       border: 1px solid #00f5af; z-index: 50; pointer-events: none;
     }
     .show-evidence { opacity: 1 !important; transform: translateY(0) !important; }
     .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
 
-    .ad-slot-bottom { width: 100%; height: 60px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; border-top: 1px solid #111; z-index: 100; font-size: 9px; color: #222; }
     footer { padding-bottom: 10px; width: 100%; text-align: center; font-size: 10px; z-index: 20; opacity: 0.3; }
   </style>
 </head>
@@ -63,16 +70,19 @@
   <div id="container">
     <div class="ad-slot-top">AD SPACE (TOP)</div>
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
+    
     <div id="ranking-board">
         <div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;"></div>
         <div id="ranks"></div>
-        <div style="font-size:7px; margin-top:5px; color:#111; text-align:center;">SPONSORED LINKS</div>
     </div>
+
     <div id="message-container"><div id="message"></div></div>
+    
     <div id="display-area">
       <div id="number">0</div>
       <div id="final-waste"></div>
     </div>
+
     <div class="ad-slot-bottom">AD SPACE (ANCHOR)</div>
     <footer id="footer-links"></footer>
   </div>
@@ -168,7 +178,7 @@
         const isSelf = u.name === t.you;
         let scoreVal = u.score.toLocaleString();
         if (isSelf && current >= 1000000) scoreVal = "DEAD";
-        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}"><span class="rank-name">${i + 1}. ${u.name}</span><span>${scoreVal}</span></div>`;
+        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}"><span>${i + 1}. ${u.name}</span><span>${scoreVal}</span></div>`;
       }).join('');
     }
 
@@ -208,6 +218,4 @@
       finalWasteEl.style.opacity = "1"; finalWasteEl.classList.add("dead-stable-text");
     }
     updateDisplay();
-  </script>
-</body>
-</html>
+  </
