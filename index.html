@@ -4,92 +4,46 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>Swipe</title>
-
 <style>
   html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    background:#000;
-    color:#eaeaea;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow:hidden;
-    touch-action: none; /* スワイプ時のブラウザ標準挙動（スクロール等）を防止 */
+    margin:0; padding:0; height:100%;
+    background:#000; color:#eaeaea;
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow:hidden; touch-action: none;
   }
-
   #app{
-    height:100%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    width: 100%;
+    height:100%; display:flex;
+    justify-content:center; align-items:center;
+    flex-direction:column; transition: background 0.1s;
   }
-
   #count{
-    font-size:64px;
-    letter-spacing:1px;
-    user-select:none;
+    font-size:64px; letter-spacing:1px; user-select:none;
+    transition: transform 0.05s, color 0.1s;
   }
-
-  #hint{
-    position:fixed;
-    top:16px;
-    font-size:12px;
-    color:#555;
-    user-select:none;
+  #streak-ui {
+    position: fixed; top: 60px; font-size: 14px; color: #ff3e3e;
+    font-weight: bold; opacity: 0; transition: opacity 0.2s;
   }
-
+  #hint{ position:fixed; top:16px; font-size:12px; color:#555; user-select:none; }
   #message{
-    position:fixed;
-    top:40%;
-    width:100%;
-    text-align:center;
-    font-size:16px;
-    color:#777;
-    opacity:0;
-    transition:opacity .25s;
-    pointer-events:none;
-    user-select:none;
+    position:fixed; top:40%; width:100%; text-align:center;
+    font-size:16px; color:#777; opacity:0; pointer-events:none;
   }
-
-  footer{
-    position:fixed;
-    bottom:60px;
-    width:100%;
-    text-align:center;
-    font-size:12px;
-    color:#666;
-  }
-  footer a{
-    color:#666;
-    margin:0 8px;
-    text-decoration:none;
-  }
-
+  footer{ position:fixed; bottom:60px; width:100%; text-align:center; font-size:12px; color:#666; }
+  footer a{ color:#666; margin:0 8px; text-decoration:none; }
   #ad{
-    position:fixed;
-    bottom:0;
-    width:100%;
-    height:60px;
-    background:#111;
-    color:#555;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:12px;
-    opacity:.4;
-    transition: opacity 0.3s;
+    position:fixed; bottom:0; width:100%; height:60px;
+    background:#111; color:#555; display:flex;
+    justify-content:center; align-items:center; font-size:12px; opacity:.4;
   }
 </style>
 </head>
-
 <body>
 <div id="app">
   <div id="hint">Swipe or Tap</div>
+  <div id="streak-ui">STREAKING...</div>
   <div id="count">0</div>
 </div>
-
 <div id="message"></div>
 
 <footer>
@@ -97,107 +51,63 @@
   <a href="privacy.html">Privacy Policy</a>
   <a href="https://github.com/あなたのユーザー名">Contact</a>
 </footer>
-
 <div id="ad">Ad Space</div>
 
 <script>
 let count = 0;
+let lastAction = Date.now();
 const countEl = document.getElementById("count");
 const msgEl = document.getElementById("message");
-let msgTimer = null;
-let lastAction = Date.now();
+const appEl = document.getElementById("app");
+const streakUi = document.getElementById("streak-ui");
 
-/* exact messages */
-const exactMessages = {
-  1:"You started.",
-  2:"That happened.",
-  3:"Still here.",
-  4:"Nothing changed.",
-  5:"You kept going.",
-  6:"This is a thing now.",
-  7:"You did that.",
-  8:"Again.",
-  9:"Still nothing.",
-  10:"Okay.",
-  42:"That number meant something. Not here.",
-  69:"Nice. Still pointless.",
-  100:"You expected something, didn't you?",
-  333:"No reward is coming.",
-  777:"Lucky number. Same result.",
-  1000:"You spent time on this.",
-  10000:"Time converted to digits.",
-  100000:"This kept you here.",
-  1000000:"It kept going. So did you."
-};
+/* 1. 意味なし即反応 + 可変報酬(8%で+10) */
+function increment() {
+  const now = Date.now();
+  const delta = now - lastAction;
+  
+  // ストリーク判定（テンポ崩すとリセット感が出るよう演出）
+  // 1.5秒以上空くとテンポ崩れとみなす
+  if (delta > 1500) {
+    countEl.style.color = "#555";
+    streakUi.style.opacity = 0;
+  } else {
+    streakUi.style.opacity = 1;
+  }
 
-/* generic pools */
-const generic = {
-  small:["This counts as progress.","No meaning added.","You noticed this."],
-  mid:["Nothing unlocked.","Still no purpose.","You stayed."],
-  large:["This feels familiar.","You are persistent.","It still works."],
-  huge:["Still no ending.","This is just a number.","You kept the pattern."]
-};
-
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-function shouldShow(n){
-  if(n<=10) return true;
-  if(n<100) return n%10===0;
-  if(n<1000) return n%50===0;
-  if(n<10000) return n%100===0;
-  if(n<100000) return n%1000===0;
-  if(n<1000000) return n%10000===0;
-  return n===1000000;
-}
-
-function textFor(n){
-  if(exactMessages[n]) return exactMessages[n];
-  if(n<100) return pick(generic.small);
-  if(n<1000) return pick(generic.mid);
-  if(n<10000) return pick(generic.mid);
-  if(n<100000) return pick(generic.large);
-  if(n<1000000) return pick(generic.huge);
-  return "";
-}
-
-function showMessage(n){
-  if(!shouldShow(n)) return;
-  const t = textFor(n);
-  if(!t) return;
-  msgEl.textContent = t;
-  msgEl.style.opacity = 1;
-  clearTimeout(msgTimer);
-  msgTimer = setTimeout(()=>msgEl.style.opacity=0,1000);
-}
-
-function increment(){
-  count++;
+  // 報酬ロジック
+  let add = 1;
+  let isJackpot = false;
+  if (Math.random() < 0.08) {
+    add = 10;
+    isJackpot = true;
+  }
+  
+  count += add;
   countEl.textContent = count;
-  showMessage(count);
-  lastAction = Date.now();
+
+  /* 2. 視覚＋振動フィードバック */
+  // 振動
+  if (navigator.vibrate) {
+    isJackpot ? navigator.vibrate([50, 30, 50]) : navigator.vibrate(10);
+  }
+
+  // 数字肥大・色変化
+  const scale = isJackpot ? 1.5 : 1.1;
+  const color = isJackpot ? "#ff00ff" : "#fff";
+  
+  countEl.style.transform = `scale(${scale})`;
+  countEl.style.color = color;
+  if (isJackpot) appEl.style.background = "#1a001a";
+
+  setTimeout(() => {
+    countEl.style.transform = "scale(1)";
+    if (isJackpot) appEl.style.background = "#000";
+  }, 50);
+
+  lastAction = now;
 }
 
-/* 修正点: pointerdown/up で単純にカウントするように変更 */
-let isTouching = false;
-
-document.addEventListener("pointerdown", e => {
-  isTouching = true;
-});
-
-document.addEventListener("pointerup", e => {
-  if(!isTouching) return;
-  increment();
-  isTouching = false;
-});
-
-/* ad visibility on idle */
-setInterval(()=>{
-  const ad=document.getElementById("ad");
-  ad.style.opacity = (Date.now()-lastAction>1500)?1:.4;
-},300);
-</script>
-</body>
-</html>
 
 
 
