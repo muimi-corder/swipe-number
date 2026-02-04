@@ -46,9 +46,7 @@
     let lastTime = Date.now();
     let lastCheckpoint = Math.floor(value / 50);
     let isDead = value >= 1000000;
-    let audioCtx = null;
-    let noiseNode = null;
-    let noiseGain = null;
+    let audioCtx = null, noiseNode = null, noiseGain = null;
 
     const numberEl = document.getElementById("number");
     const finalWasteEl = document.getElementById("final-waste");
@@ -73,9 +71,7 @@
       let lastOut = 0.0;
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + (0.02 * white)) / 1.02;
-        lastOut = output[i];
-        output[i] *= 3.5;
+        output[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = output[i]; output[i] *= 3.5;
       }
       noiseNode = audioCtx.createBufferSource();
       noiseNode.buffer = noiseBuffer; noiseNode.loop = true;
@@ -84,6 +80,13 @@
       noiseNode.connect(noiseGain); noiseGain.connect(audioCtx.destination);
       noiseNode.start();
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (noiseGain) {
+        const volume = document.hidden ? 0 : 0.02;
+        noiseGain.gain.setTargetAtTime(volume, audioCtx.currentTime, 0.1);
+      }
+    });
 
     function showFloatingText() {
       const floatText = document.createElement("div");
@@ -125,6 +128,7 @@
     function triggerDeadEvent() {
       numberEl.textContent = t.dead; finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
       finalWasteEl.style.opacity = "1";
+      if (noiseGain) noiseGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
     }
 
     function updateRanking(current) {
@@ -156,9 +160,9 @@
       const idleTime = Date.now() - lastTime;
       if (idleTime > 10000 && value > 0 && !isDead) {
         value -= 1;
-        if (noiseGain) noiseGain.gain.setTargetAtTime(0.08, audioCtx.currentTime, 0.5);
+        if (noiseGain && !document.hidden) noiseGain.gain.setTargetAtTime(0.08, audioCtx.currentTime, 0.5);
         triggerPulse(110, 0.05, 'red'); updateDisplay(false);
-      } else if (noiseGain) {
+      } else if (noiseGain && !document.hidden) {
         noiseGain.gain.setTargetAtTime(0.02, audioCtx.currentTime, 0.5);
       }
       if (idleTime > 3000) { 
