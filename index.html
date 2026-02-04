@@ -21,54 +21,65 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
-    /* 数字：光らせず、色のキレだけを追求 */
+    /* メインの数字：基本状態 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      transition: none; /* ヌルっと動かないよう transition を削除 */
+      /* 大きさの変化だけ、ごくわずかに速いアニメーションを入れる */
+      transition: transform 0.05s ease; 
+      transform: scale(1);
     }
 
-    /* 状態：単色のみ */
-    .active { color: #fff; }
+    /* 状態別の色とサイズ */
+    .active { color: #fff; transform: scale(1); }
     
-    /* タップ時の青：一瞬だけ青に切り替わる */
-    .tap-blue { color: #00ffff !important; }
-
-    /* 大当たりのマゼンタ：高速チカチカ点滅 */
-    .flash { 
-      color: #ff00ff !important; 
-      animation: flicker 0.05s infinite; /* 秒速点滅 */
+    /* タップ時：青 + 主張しすぎない拡大 */
+    .tap-blue { 
+      color: #00ffff !important; 
+      transform: scale(1.08) !important; 
     }
 
-    /* ペナルティの赤 */
-    .penalty { color: #ff0000 !important; }
+    /* 大当たり：黄色 + 高速チカチカ + わずかに大きめ */
+    .flash { 
+      color: #ffff00 !important; 
+      transform: scale(1.15) !important;
+      animation: flicker 0.05s infinite; 
+    }
 
-    /* チカチカ演出用のアニメーション */
+    /* 減少中：赤 + 縮小 */
+    .penalty { 
+      color: #ff0000 !important; 
+      transform: scale(0.95);
+    }
+
     @keyframes flicker {
       0% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.4; }
       100% { opacity: 1; }
+    }
+
+    /* 無意味なメッセージ */
+    #message {
+      position: absolute; top: 30%; width: 100%;
+      text-align: center; font-size: 14px; color: #444;
+      font-weight: bold; pointer-events: none;
+      text-transform: uppercase; letter-spacing: 1px;
     }
 
     #hint { position: absolute; bottom: 120px; font-size: 12px; opacity: 0.3; pointer-events: none; }
 
-    /* フッター */
     footer {
       position: absolute; bottom: 80px; width: 100%;
       text-align: center; font-size: 12px; z-index: 10;
     }
     footer a { color: #444; margin: 0 10px; text-decoration: none; }
 
-    .ad {
-      width: 100%; min-height: 60px; background: #111;
-      display: flex; justify-content: center; align-items: center;
-    }
+    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
 
-    /* ポップアップもシンプルに */
     .reward {
-      position: absolute; font-size: 24px; font-weight: 900; color: #ff00ff;
+      position: absolute; font-size: 24px; font-weight: 900; color: #ffff00;
       pointer-events: none; z-index: 100;
-      animation: rise 0.4s steps(4) forwards; /* 階段状に動かしてチカチカ感を出す */
+      animation: rise 0.4s steps(4) forwards;
     }
     @keyframes rise {
       0% { opacity: 0; transform: translate(-50%, 0); }
@@ -83,8 +94,9 @@
       <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
     </div>
 
+    <div id="message"></div>
     <div id="number">0</div>
-    <div id="hint">NON-STOP.</div>
+    <div id="hint">swipe or tap.</div>
 
     <footer>
       <a href="about.html">About</a>
@@ -101,8 +113,9 @@
     let value = Number(localStorage.getItem("value") || 0);
     let lastTime = Date.now();
     const numberEl = document.getElementById("number");
+    const messageEl = document.getElementById("message");
 
-    numberEl.textContent = Math.floor(value).toLocaleString();
+    updateDisplay();
 
     function handleAction(e) {
       if (e.target.tagName === 'A') return;
@@ -115,23 +128,24 @@
 
       updateDisplay();
 
-      // クラスをリセット（チカチカを即座に反映させるため）
+      // クラスをリセット
       numberEl.className = "";
       void numberEl.offsetWidth; 
 
       if (isJackpot) {
-        numberEl.classList.add("flash"); // チカチカ点滅
+        numberEl.classList.add("flash"); 
         const t = e.changedTouches ? e.changedTouches[0] : e;
         triggerReward(t.clientX, t.clientY);
-        if (navigator.vibrate) navigator.vibrate([30, 30, 30]);
+        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
       } else {
-        numberEl.classList.add("tap-blue"); // パッと青くなる
+        numberEl.classList.add("tap-blue"); 
         if (navigator.vibrate) navigator.vibrate(10);
       }
 
-      // 0.1秒後に元の色へ（この切り替えがチカチカ感を生む）
+      // 0.1秒後に元の大きさと色に戻す
       setTimeout(() => {
-        if (Date.now() - lastTime < 1000) {
+        const checkNow = Date.now();
+        if (checkNow - lastTime < 1100) {
           numberEl.className = "active";
         }
       }, 100);
@@ -142,7 +156,18 @@
 
     function updateDisplay() {
       if (value < 0) value = 0;
-      numberEl.textContent = Math.floor(value).toLocaleString();
+      const floorVal = Math.floor(value);
+      numberEl.textContent = floorVal.toLocaleString();
+
+      if (floorVal > 1000) {
+        messageEl.textContent = "It's just a number.";
+      } else if (floorVal > 500) {
+        messageEl.textContent = "You're doing something meaningless.";
+      } else if (floorVal > 100) {
+        messageEl.textContent = "Why are you still here?";
+      } else {
+        messageEl.textContent = "";
+      }
     }
 
     function save() {
@@ -159,21 +184,18 @@
       setTimeout(() => div.remove(), 400);
     }
 
-    // 0.5秒ごとの減少ペナルティ
+    // 1.2秒ごとの減少ペナルティ
     setInterval(() => {
       const now = Date.now();
-      const idleTime = now - lastTime;
-
-      if (idleTime > 1200) {
-        numberEl.className = "penalty"; // 赤くなる
-        
+      if (now - lastTime > 1200) {
+        numberEl.className = "penalty"; 
         if (value > 0) {
           value -= 1; 
           updateDisplay();
           save();
         }
       }
-    }, 500);
+    }, 1200);
 
     document.addEventListener("touchend", handleAction, { passive: false });
     document.addEventListener("mouseup", handleAction);
