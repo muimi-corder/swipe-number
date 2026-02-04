@@ -9,8 +9,7 @@
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
 
     #display-area { text-align: center; width: 100%; }
-    /* 初期は非表示 */
-    #target-text { font-size: 14px; color: #ff3b30; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; transition: opacity 0.5s; }
+    #target-text { font-size: 14px; color: #ff3b30; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.8; }
     #number { font-size: 80px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
     #message { font-size: 13px; color: #444; font-weight: 900; height: 24px; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
     
@@ -22,40 +21,36 @@
       padding: 20px; text-align: center; box-sizing: border-box;
     }
     
-    #philosophy { font-size: 16px; line-height: 1.5; color: #777; max-width: 500px; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 60px; }
+    #philosophy { font-size: 16px; line-height: 1.5; color: #777; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 60px; }
     
     #support-area { opacity: 0; transition: opacity 1.5s; display: flex; flex-direction: column; align-items: center; }
     #support-note { font-size: 10px; color: #222; margin-bottom: 8px; }
-    .donate-btn { 
-      font-size: 11px; color: #444; text-decoration: underline; background: none; border: none; padding: 5px 10px; cursor: pointer;
-    }
+    .donate-btn { font-size: 11px; color: #444; text-decoration: underline; background: none; border: none; padding: 5px 10px; cursor: pointer; }
 
     footer#header-links { position: absolute; bottom: 20px; font-size: 10px; opacity: 0.1; }
     #header-links a { color: #fff; text-decoration: none; margin: 0 10px; }
 
-    .tap-anim { animation: tap-pulse 0.04s ease-out; }
-    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+    /* 報酬感を高めるための少し大きめのスケールアニメ */
+    .tap-anim { animation: tap-pulse 0.06s cubic-bezier(0, 0, 0.2, 1); }
+    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
   <div id="progress-bar"></div>
-  
   <div id="container">
     <div id="display-area">
       <div id="target-text">TARGET: 1,000,000</div>
-      <div id="number">START</div>
+      <div id="number">0</div>
       <div id="message"></div>
     </div>
   </div>
 
   <div id="final-screen">
-    <div id="philosophy">終わりは突然で、大体はこんなものだ。</div>
-    
+    <div id="philosophy">終わりは突然で、大体はそんなものだ。</div>
     <div id="support-area">
       <div id="support-note">支援は任意です</div>
       <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-btn">活動を支援する</a>
     </div>
-    
     <footer id="header-links">
       <a href="about.html">About</a>
       <a href="privacy.html">Privacy</a>
@@ -64,14 +59,12 @@
   </div>
 
   <script>
-    const LOCK_KEY = "void_lock_absolute_final";
-
-    if (localStorage.getItem(LOCK_KEY)) {
-      window.onload = () => finish(true);
-    }
+    const LOCK_KEY = "void_lock_high_response";
+    if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null;
     let isFinished = false;
+    let tapCount = 0;
     const DURATION = 60000; 
     const MAX_VAL = 978412; 
 
@@ -89,27 +82,32 @@
       if (isFinished || !startTime) return;
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / DURATION, 1);
-      
       document.getElementById("progress-bar").style.width = (progress * 100) + "%";
-      const currentValue = Math.floor(MAX_VAL * Math.pow(progress, 0.75));
-      document.getElementById("number").textContent = currentValue.toLocaleString();
-
+      
+      // 時間経過によるベース数値
+      const baseValue = MAX_VAL * Math.pow(progress, 0.75);
+      // タップによる微増（報酬感の演出）
+      const bonusValue = tapCount * 2; 
+      
+      const displayValue = Math.floor(Math.min(baseValue + bonusValue, MAX_VAL));
+      document.getElementById("number").textContent = displayValue.toLocaleString();
+      
       if (progress >= 1) finish();
     }
 
     function handleTap() {
       if (isFinished) return;
       
-      // 初回タップ時の処理
+      tapCount++;
       if (!startTime) {
         startTime = Date.now();
-        document.getElementById("target-text").style.opacity = "0.8"; // TARGETを表示
-        document.getElementById("message").textContent = "加速が始まった。"; // 初回メッセージ
-        setInterval(update, 50);
-        return; // 初回はメッセージとTARGET表示のみ
+        setInterval(update, 30); // 更新頻度を上げてより滑らかに
       }
 
-      if (Math.random() < 0.25) {
+      // タップした瞬間に数値を更新（最速の報酬）
+      update();
+
+      if (Math.random() < 0.2) {
         document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
       }
 
@@ -122,13 +120,8 @@
     function finish(alreadyLocked = false) {
       isFinished = true;
       if (!alreadyLocked) localStorage.setItem(LOCK_KEY, "true");
-      
-      const finalScreen = document.getElementById("final-screen");
-      finalScreen.style.display = "flex";
-
-      setTimeout(() => {
-        document.getElementById("support-area").style.opacity = "1";
-      }, 2000);
+      document.getElementById("final-screen").style.display = "flex";
+      setTimeout(() => { document.getElementById("support-area").style.opacity = "1"; }, 2000);
     }
 
     document.addEventListener("touchstart", (e) => { 
