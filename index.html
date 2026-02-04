@@ -28,25 +28,25 @@
       transform: scale(1);
     }
 
-    /* 状態別の色とサイズ */
+    /* 状態別の色 */
     .active { color: #fff; transform: scale(1); }
     
-    /* タップ時：明るい緑 + 少し拡大 */
+    /* タップ時：最新のLED信号機の青緑（エメラルド） */
     .tap-green { 
-      color: #00ff00 !important; 
+      color: #00f5af !important; 
       transform: scale(1.08) !important; 
     }
 
-    /* 大当たり：黄色 + 高速チカチカ + わずかに大きめ */
+    /* 大当たり：黄色 */
     .flash { 
       color: #ffff00 !important; 
       transform: scale(1.15) !important;
       animation: flicker 0.05s infinite; 
     }
 
-    /* 減少中：赤 + 縮小 */
+    /* 減少中：信号の赤 */
     .penalty { 
-      color: #ff0000 !important; 
+      color: #ff3b30 !important; 
       transform: scale(0.95);
     }
 
@@ -134,7 +134,7 @@
         triggerReward(t.clientX, t.clientY);
         if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
       } else {
-        numberEl.classList.add("tap-green"); // 緑に変更
+        numberEl.classList.add("tap-green"); 
         if (navigator.vibrate) navigator.vibrate(10);
       }
 
@@ -178,7 +178,7 @@
       setTimeout(() => div.remove(), 400);
     }
 
-    // 1.2秒ごとの減少ペナルティ
+    // 1.2秒ごとのペナルティ
     setInterval(() => {
       const now = Date.now();
       if (now - lastTime > 1200) {
