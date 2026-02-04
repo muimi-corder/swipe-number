@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Void Pulse</title>
+  
+  <title>Void Pulse | 究極の暇つぶし連打ゲーム</title>
+  <meta name="description" content="ひたすら数字を増やすだけの究極の暇つぶしサイト。100万回タップの虚無の先に何があるのか？スマホ・PC対応の無料連打ゲーム。">
+  <meta name="keywords" content="連打ゲーム,暇つぶし,無料,ブラウザゲーム,クリック,100万回,Void Pulse">
+  
+  <meta property="og:title" content="Void Pulse | 究極の暇つぶし連打ゲーム">
+  <meta property="og:description" content="100万回のタップに挑め。ただそれだけの虚無。">
+  <meta property="og:type" content="website">
+
   <style>
     /* 既存のレイアウト維持 */
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
@@ -16,7 +24,7 @@
     #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; width: 100%; position: relative; }
     #number { font-size: 90px; font-weight: 900; transition: color 0.1s; }
     
-    /* オーバーヒート用オーバーレイ（普段は非表示） */
+    /* オーバーヒート用オーバーレイ */
     #overheat-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(255, 0, 0, 0.2); backdrop-filter: blur(20px);
@@ -32,16 +40,20 @@
       border: none; border-radius: 50px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
     }
 
-    /* 既存の演出CSS */
     .tap-anim { animation: tap-pulse 0.1s ease-out; }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
-    .show-msg { opacity: 1 !important; }
     #evidence-overlay { position: absolute; bottom: 80px; background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px; display: flex; opacity: 0; transform: translateY(10px); transition: opacity 0.5s, transform 0.5s; border: 1px solid #00f5af; z-index: 50; pointer-events: none; }
     .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
+
+    /* SEO用：検索エンジンには見えるが、ユーザーの邪魔をしない隠しテキスト */
+    .seo-text { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
   </style>
 </head>
 <body>
+  <h1 class="seo-text">Void Pulse - 暇つぶし連打ゲーム</h1>
+  <p class="seo-text">無料で遊べる連打測定・クリックゲーム。100万回タップを目指すシンプルな虚無体験を提供します。</p>
+
   <div id="container">
     <header id="header-links"></header>
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
@@ -71,8 +83,8 @@
     const t = i18n[lang];
     let value = Number(localStorage.getItem("value") || 0);
     let totalTaps = Number(localStorage.getItem("totalTaps") || 0);
-    let heat = 0; // 現在の熱量
-    const MAX_HEAT = 5000; // 5000タップで停止
+    let heat = 0;
+    const MAX_HEAT = 5000;
     let isOverheating = false;
     let lastTime = Date.now();
     let isDead = value >= 1000000;
@@ -128,34 +140,33 @@
       if (heat >= MAX_HEAT) {
         isOverheating = true;
         document.getElementById("overheat-overlay").style.display = "flex";
-        if (noiseGain) noiseGain.gain.setTargetAtTime(0.2, audioCtx.currentTime, 0.1); // ノイズ強調
+        if (noiseGain) noiseGain.gain.setTargetAtTime(0.2, audioCtx.currentTime, 0.1);
         return;
       }
 
       const isJackpot = Math.random() < 0.08;
       if (isJackpot) {
         value += 10; triggerPulse(660, 0.1, 'yellow');
-        const f = document.createElement("div"); f.textContent = "+10"; f.className = "floating";
-        f.style.position = "absolute"; f.style.color = "#ffff00"; f.style.top = "45%"; f.style.left = "65%";
+        const f = document.createElement("div"); f.textContent = "+10";
+        f.style.position = "absolute"; f.style.color = "#ffff00"; f.style.top = "45%"; f.style.left = "65%"; f.style.pointerEvents = "none";
         document.body.appendChild(f);
-        setTimeout(() => { f.style.transform = "translateY(-40px)"; f.style.opacity = "0"; }, 50);
+        setTimeout(() => { f.style.transition = "0.6s"; f.style.transform = "translateY(-40px)"; f.style.opacity = "0"; }, 50);
         setTimeout(() => f.remove(), 600);
       } else {
         value += 1; triggerPulse(330, 0.1, 'green');
       }
-      totalTaps++; lastTime = Date.now(); updateDisplay(true);
+      totalTaps++; lastTime = Date.now(); updateDisplay();
       localStorage.setItem("value", value); localStorage.setItem("totalTaps", totalTaps);
     }
 
     function coolDown() {
-      // 本来はここで広告の読み込み完了を待つ処理を入れる
       heat = 0;
       isOverheating = false;
       document.getElementById("overheat-overlay").style.display = "none";
       if (noiseGain) noiseGain.gain.setTargetAtTime(0.02, audioCtx.currentTime, 0.5);
     }
 
-    function updateDisplay(isTapping = false) {
+    function updateDisplay() {
       const v = Math.floor(value);
       if (v >= 1000000 && !isDead) {
         isDead = true; document.getElementById("number").textContent = t.dead;
@@ -169,10 +180,11 @@
     setInterval(() => {
       const idleTime = Date.now() - lastTime;
       if (idleTime > 10000 && value > 0 && !isDead) {
-        value -= 1; triggerPulse(110, 0.05, 'red'); updateDisplay(false);
+        value -= 1; triggerPulse(110, 0.05, 'red'); updateDisplay();
       }
       if (idleTime > 3000) document.getElementById("evidence-overlay").style.opacity = "1";
       else document.getElementById("evidence-overlay").style.opacity = "0";
+      document.getElementById("waste-time").textContent = `${Math.floor(totalTaps/60)} MINS WASTED`;
     }, 1200);
 
     document.addEventListener("touchstart", (e) => { if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
