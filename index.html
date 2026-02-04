@@ -28,40 +28,29 @@
       transform: scale(1);
     }
 
-    /* 状態別の色 */
+    /* 信号機の青緑(#00f5af) */
     .active { color: #fff; transform: scale(1); }
-    
-    /* タップ時：最新のLED信号機の青緑（エメラルド） */
-    .tap-green { 
-      color: #00f5af !important; 
-      transform: scale(1.08) !important; 
-    }
-
-    /* 大当たり：黄色 */
+    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
     .flash { 
       color: #ffff00 !important; 
       transform: scale(1.15) !important;
       animation: flicker 0.05s infinite; 
     }
-
-    /* 減少中：信号の赤 */
-    .penalty { 
-      color: #ff3b30 !important; 
-      transform: scale(0.95);
-    }
+    .penalty { color: #ff3b30 !important; transform: scale(0.95); }
 
     @keyframes flicker {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
+      0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
     }
 
+    /* 短く表示されるメッセージ */
     #message {
-      position: absolute; top: 30%; width: 100%;
-      text-align: center; font-size: 14px; color: #444;
-      font-weight: bold; pointer-events: none;
-      text-transform: uppercase; letter-spacing: 1px;
+      position: absolute; top: 25%; width: 100%;
+      text-align: center; font-size: 18px; color: #555;
+      font-weight: 900; pointer-events: none;
+      text-transform: uppercase; letter-spacing: 2px;
+      opacity: 0; transition: opacity 0.2s;
     }
+    .show-msg { opacity: 1 !important; }
 
     #hint { position: absolute; bottom: 120px; font-size: 12px; opacity: 0.3; pointer-events: none; }
 
@@ -93,7 +82,7 @@
 
     <div id="message"></div>
     <div id="number">0</div>
-    <div id="hint">swipe or tap.</div>
+    <div id="hint">keep swiping.</div>
 
     <footer>
       <a href="about.html">About</a>
@@ -109,6 +98,7 @@
   <script>
     let value = Number(localStorage.getItem("value") || 0);
     let lastTime = Date.now();
+    let lastMsgValue = 0;
     const numberEl = document.getElementById("number");
     const messageEl = document.getElementById("message");
 
@@ -152,21 +142,33 @@
       if (value < 0) value = 0;
       const floorVal = Math.floor(value);
       numberEl.textContent = floorVal.toLocaleString();
+      checkMessages(floorVal);
+    }
 
-      if (floorVal > 1000) {
-        messageEl.textContent = "It's just a number.";
-      } else if (floorVal > 500) {
-        messageEl.textContent = "You're doing something meaningless.";
-      } else if (floorVal > 100) {
-        messageEl.textContent = "Why are you still here?";
-      } else {
-        messageEl.textContent = "";
+    function checkMessages(v) {
+      let msg = "";
+      // 100万までの絶望的なステップ
+      if (v >= 1000000) msg = "YOU WON NOTHING.";
+      else if (v >= 500000) msg = "HALF WAY TO HELL.";
+      else if (v >= 100000) msg = "ARE YOU INSANE?";
+      else if (v >= 50000) msg = "GO TO SLEEP.";
+      else if (v >= 10000) msg = "STOP IT.";
+      else if (v >= 5000) msg = "GO OUTSIDE.";
+      else if (v >= 2000) msg = "LIFE IS SHORT.";
+      else if (v >= 1000) msg = "STILL NOTHING.";
+      else if (v >= 500) msg = "TOTAL WASTE.";
+      else if (v >= 100) msg = "JUST A NUMBER.";
+
+      // メッセージが変わった瞬間だけ、短く表示
+      if (msg !== "" && v !== lastMsgValue && msg !== messageEl.textContent) {
+        messageEl.textContent = msg;
+        messageEl.classList.add("show-msg");
+        setTimeout(() => messageEl.classList.remove("show-msg"), 1500); // 1.5秒で消える
+        lastMsgValue = v;
       }
     }
 
-    function save() {
-      localStorage.setItem("value", value);
-    }
+    function save() { localStorage.setItem("value", value); }
 
     function triggerReward(x, y) {
       const div = document.createElement("div");
@@ -178,7 +180,6 @@
       setTimeout(() => div.remove(), 400);
     }
 
-    // 1.2秒ごとのペナルティ
     setInterval(() => {
       const now = Date.now();
       if (now - lastTime > 1200) {
@@ -193,7 +194,6 @@
 
     document.addEventListener("touchend", handleAction, { passive: false });
     document.addEventListener("mouseup", handleAction);
-
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
   </script>
