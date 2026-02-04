@@ -21,39 +21,58 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
+    /* 数字：光らせず、色のキレだけを追求 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      /* 跳ねる演出（transform）を削除し、色変化のレスポンスを最速に */
-      transition: color 0.05s ease;
-      user-select: none;
+      transition: none; /* ヌルっと動かないよう transition を削除 */
     }
 
-    /* 通常：白（操作中） */
+    /* 状態：単色のみ */
     .active { color: #fff; }
+    
+    /* タップ時の青：一瞬だけ青に切り替わる */
+    .tap-blue { color: #00ffff !important; }
 
-    /* タップ・スワイプの瞬間：青（復活） */
-    .tap-blue { color: #00ffcc !important; text-shadow: 0 0 15px #00ffcc; }
+    /* 大当たりのマゼンタ：高速チカチカ点滅 */
+    .flash { 
+      color: #ff00ff !important; 
+      animation: flicker 0.05s infinite; /* 秒速点滅 */
+    }
 
-    /* 大当たり：マゼンタ */
-    .flash { color: #ff00ff !important; text-shadow: 0 0 20px #ff00ff; }
+    /* ペナルティの赤 */
+    .penalty { color: #ff0000 !important; }
 
-    /* ストリーク圧：赤（放置時） */
-    .penalty { color: #ff3e3e !important; text-shadow: 0 0 15px #ff3e3e; }
+    /* チカチカ演出用のアニメーション */
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
 
-    #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; }
-    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
+    #hint { position: absolute; bottom: 120px; font-size: 12px; opacity: 0.3; pointer-events: none; }
 
+    /* フッター */
+    footer {
+      position: absolute; bottom: 80px; width: 100%;
+      text-align: center; font-size: 12px; z-index: 10;
+    }
+    footer a { color: #444; margin: 0 10px; text-decoration: none; }
+
+    .ad {
+      width: 100%; min-height: 60px; background: #111;
+      display: flex; justify-content: center; align-items: center;
+    }
+
+    /* ポップアップもシンプルに */
     .reward {
       position: absolute; font-size: 24px; font-weight: 900; color: #ff00ff;
       pointer-events: none; z-index: 100;
-      animation: rise 0.5s ease-out forwards;
+      animation: rise 0.4s steps(4) forwards; /* 階段状に動かしてチカチカ感を出す */
     }
-
     @keyframes rise {
       0% { opacity: 0; transform: translate(-50%, 0); }
-      50% { opacity: 1; transform: translate(-50%, -50px); }
-      100% { opacity: 0; transform: translate(-50%, -80px); }
+      100% { opacity: 1; transform: translate(-50%, -60px); }
     }
   </style>
 </head>
@@ -65,7 +84,13 @@
     </div>
 
     <div id="number">0</div>
-    <div id="hint">DON'T LET IT RED.</div>
+    <div id="hint">NON-STOP.</div>
+
+    <footer>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/">Contact</a>
+    </footer>
 
     <div class="ad">
       <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
@@ -80,37 +105,34 @@
     numberEl.textContent = Math.floor(value).toLocaleString();
 
     function handleAction(e) {
+      if (e.target.tagName === 'A') return;
       if (e.cancelable) e.preventDefault();
       
       const now = Date.now();
-      
-      // 1. 可変報酬：8%で+10、それ以外は+1
       const isJackpot = Math.random() < 0.08;
       const bonus = isJackpot ? 10 : 1;
       value += bonus;
 
       updateDisplay();
 
-      // 2. 視覚＋振動フィードバック
-      numberEl.classList.remove("penalty", "flash", "tap-blue");
-      void numberEl.offsetWidth; // アニメーションリセット
+      // クラスをリセット（チカチカを即座に反映させるため）
+      numberEl.className = "";
+      void numberEl.offsetWidth; 
 
       if (isJackpot) {
-        numberEl.classList.add("flash");
+        numberEl.classList.add("flash"); // チカチカ点滅
         const t = e.changedTouches ? e.changedTouches[0] : e;
         triggerReward(t.clientX, t.clientY);
-        if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+        if (navigator.vibrate) navigator.vibrate([30, 30, 30]);
       } else {
-        // 通常タップ：青くなる演出
-        numberEl.classList.add("tap-blue");
+        numberEl.classList.add("tap-blue"); // パッと青くなる
         if (navigator.vibrate) navigator.vibrate(10);
       }
 
-      // 青色/マゼンタを少し残して白に戻す準備
+      // 0.1秒後に元の色へ（この切り替えがチカチカ感を生む）
       setTimeout(() => {
         if (Date.now() - lastTime < 1000) {
-          numberEl.classList.remove("tap-blue", "flash");
-          numberEl.classList.add("active");
+          numberEl.className = "active";
         }
       }, 100);
 
@@ -134,28 +156,24 @@
       div.style.left = (x || window.innerWidth / 2) + "px";
       div.style.top = (y || window.innerHeight / 2) + "px";
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 500);
+      setTimeout(() => div.remove(), 400);
     }
 
-    // 3. ストリーク圧：0.5秒ごとに判定
+    // 0.5秒ごとの減少ペナルティ
     setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastTime;
 
       if (idleTime > 1200) {
-        // 1.2秒以上放置で赤くなり、減少モードへ
-        numberEl.classList.remove("active", "tap-blue", "flash");
-        numberEl.classList.add("penalty");
+        numberEl.className = "penalty"; // 赤くなる
         
         if (value > 0) {
-          value -= 1; // 0.5秒ごとに1減らす
+          value -= 1; 
           updateDisplay();
           save();
         }
-      } else {
-        numberEl.classList.remove("penalty");
       }
-    }, 500); // ここで減少スピード（0.5秒）を制御
+    }, 500);
 
     document.addEventListener("touchend", handleAction, { passive: false });
     document.addEventListener("mouseup", handleAction);
