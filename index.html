@@ -24,19 +24,22 @@
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      /* 跳ねる演出を消し、色の変化のみを速く反映 */
+      /* 跳ねる演出（transform）を削除し、色変化のレスポンスを最速に */
       transition: color 0.05s ease;
       user-select: none;
     }
 
-    /* 通常：白 */
-    .normal { color: #fff; }
+    /* 通常：白（操作中） */
+    .active { color: #fff; }
 
-    /* 大当たり：マゼンタ（跳ねない） */
+    /* タップ・スワイプの瞬間：青（復活） */
+    .tap-blue { color: #00ffcc !important; text-shadow: 0 0 15px #00ffcc; }
+
+    /* 大当たり：マゼンタ */
     .flash { color: #ff00ff !important; text-shadow: 0 0 20px #ff00ff; }
 
-    /* ストリーク圧：赤（数字が減る警告状態） */
-    .penalty { color: #ff3e3e !important; text-shadow: 0 0 10px #ff3e3e; }
+    /* ストリーク圧：赤（放置時） */
+    .penalty { color: #ff3e3e !important; text-shadow: 0 0 15px #ff3e3e; }
 
     #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; }
     .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
@@ -62,7 +65,7 @@
     </div>
 
     <div id="number">0</div>
-    <div id="hint">DON'T STOP.</div>
+    <div id="hint">DON'T LET IT RED.</div>
 
     <div class="ad">
       <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
@@ -72,42 +75,50 @@
   <script>
     let value = Number(localStorage.getItem("value") || 0);
     let lastTime = Date.now();
-    let isPenaltyMode = false;
     const numberEl = document.getElementById("number");
 
-    numberEl.textContent = value.toLocaleString();
+    numberEl.textContent = Math.floor(value).toLocaleString();
 
     function handleAction(e) {
       if (e.cancelable) e.preventDefault();
       
       const now = Date.now();
-      isPenaltyMode = false; // 操作した瞬間ペナルティ解除
       
-      // 可変報酬：8%で+10、それ以外は+1
+      // 1. 可変報酬：8%で+10、それ以外は+1
       const isJackpot = Math.random() < 0.08;
       const bonus = isJackpot ? 10 : 1;
       value += bonus;
 
       updateDisplay();
 
-      // フィードバック（跳ねず、色のみ変更）
-      numberEl.classList.remove("penalty", "flash");
+      // 2. 視覚＋振動フィードバック
+      numberEl.classList.remove("penalty", "flash", "tap-blue");
+      void numberEl.offsetWidth; // アニメーションリセット
+
       if (isJackpot) {
         numberEl.classList.add("flash");
         const t = e.changedTouches ? e.changedTouches[0] : e;
         triggerReward(t.clientX, t.clientY);
         if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
-        setTimeout(() => numberEl.classList.remove("flash"), 100);
       } else {
+        // 通常タップ：青くなる演出
+        numberEl.classList.add("tap-blue");
         if (navigator.vibrate) navigator.vibrate(10);
       }
+
+      // 青色/マゼンタを少し残して白に戻す準備
+      setTimeout(() => {
+        if (Date.now() - lastTime < 1000) {
+          numberEl.classList.remove("tap-blue", "flash");
+          numberEl.classList.add("active");
+        }
+      }, 100);
 
       lastTime = now;
       save();
     }
 
     function updateDisplay() {
-      // 0以下にならないようにする
       if (value < 0) value = 0;
       numberEl.textContent = Math.floor(value).toLocaleString();
     }
@@ -126,24 +137,25 @@
       setTimeout(() => div.remove(), 500);
     }
 
-    // ストリーク圧：放置すると赤くなり、数字が減り続ける
+    // 3. ストリーク圧：0.5秒ごとに判定
     setInterval(() => {
       const now = Date.now();
       const idleTime = now - lastTime;
 
       if (idleTime > 1200) {
-        isPenaltyMode = true;
+        // 1.2秒以上放置で赤くなり、減少モードへ
+        numberEl.classList.remove("active", "tap-blue", "flash");
         numberEl.classList.add("penalty");
         
-        // 放置中、数字を減らす（0.1秒ごとに減少）
         if (value > 0) {
-          value -= 0.1; // 1秒で1減る計算
+          value -= 1; // 0.5秒ごとに1減らす
           updateDisplay();
+          save();
         }
       } else {
         numberEl.classList.remove("penalty");
       }
-    }, 100);
+    }, 500); // ここで減少スピード（0.5秒）を制御
 
     document.addEventListener("touchend", handleAction, { passive: false });
     document.addEventListener("mouseup", handleAction);
