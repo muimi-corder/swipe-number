@@ -21,11 +21,9 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
-    /* メインの数字：基本状態 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      /* 大きさの変化だけ、ごくわずかに速いアニメーションを入れる */
       transition: transform 0.05s ease; 
       transform: scale(1);
     }
@@ -33,9 +31,9 @@
     /* 状態別の色とサイズ */
     .active { color: #fff; transform: scale(1); }
     
-    /* タップ時：青 + 主張しすぎない拡大 */
-    .tap-blue { 
-      color: #00ffff !important; 
+    /* タップ時：明るい緑 + 少し拡大 */
+    .tap-green { 
+      color: #00ff00 !important; 
       transform: scale(1.08) !important; 
     }
 
@@ -58,7 +56,6 @@
       100% { opacity: 1; }
     }
 
-    /* 無意味なメッセージ */
     #message {
       position: absolute; top: 30%; width: 100%;
       text-align: center; font-size: 14px; color: #444;
@@ -128,7 +125,6 @@
 
       updateDisplay();
 
-      // クラスをリセット
       numberEl.className = "";
       void numberEl.offsetWidth; 
 
@@ -138,14 +134,12 @@
         triggerReward(t.clientX, t.clientY);
         if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
       } else {
-        numberEl.classList.add("tap-blue"); 
+        numberEl.classList.add("tap-green"); // 緑に変更
         if (navigator.vibrate) navigator.vibrate(10);
       }
 
-      // 0.1秒後に元の大きさと色に戻す
       setTimeout(() => {
-        const checkNow = Date.now();
-        if (checkNow - lastTime < 1100) {
+        if (Date.now() - lastTime < 1100) {
           numberEl.className = "active";
         }
       }, 100);
