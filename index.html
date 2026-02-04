@@ -12,29 +12,19 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
     
-    /* ランキングボード：名前と数字を左右に離す */
+    /* ランキングボード */
     #ranking-board {
-      position: absolute; top: 60px; left: 15px; width: 180px; /* 幅を少し広げた */
+      position: absolute; top: 60px; left: 15px; width: 180px;
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
       font-size: 10px; font-family: 'Courier New', monospace; color: #444; pointer-events: none;
-      border-left: 2px solid #222;
+      border-left: 2px solid #222; z-index: 5;
     }
-    .rank-item { 
-      display: flex; 
-      justify-content: space-between; /* 名前と数字を両端に配置 */
-      align-items: center;
-      margin-bottom: 3px; 
-    }
-    .rank-name { 
-      max-width: 100px; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-      white-space: nowrap; 
-    }
+    .rank-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .rank-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .rank-self { color: #00f5af; font-weight: bold; }
 
     /* 中央メッセージ */
-    #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; }
+    #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
     #message { font-size: 16px; color: #555; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.1s; text-align: center; }
     .show-msg { opacity: 1 !important; }
 
@@ -47,7 +37,15 @@
     .flash { color: #ffff00 !important; transform: scale(1.2) !important; }
     .penalty { color: #ff3b30 !important; transform: scale(0.9) !important; }
 
-    footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 10px; color: #222; }
+    /* フッター：リンクを復活 */
+    footer { 
+      position: absolute; bottom: 70px; width: 100%; text-align: center; 
+      font-size: 10px; color: #333; z-index: 20;
+    }
+    footer a { color: #555; margin: 0 8px; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
+    footer a:hover { color: #888; }
+
+    #status { position: absolute; bottom: 100px; width: 100%; text-align: center; font-size: 8px; color: #111; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -56,9 +54,17 @@
       <div style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#333; font-size: 9px;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
+    
     <div id="message-container"><div id="message"></div></div>
+    
     <div id="number">0</div>
-    <footer id="status">TAP TO START PULSE</footer>
+
+    <div id="status">INITIATING PULSE...</div>
+
+    <footer>
+      <a href="#">About</a>
+      <a href="#">Privacy</a>
+      <a href="https://www.tiktok.com/">TikTok</a> </footer>
   </div>
 
   <script>
@@ -132,25 +138,6 @@
       ).join('');
     }
 
-    function handleAction(e) {
-      if (!audioCtx) initAudio();
-      if (e.target.tagName === 'A') return;
-      if (e.cancelable) e.preventDefault();
-      
-      const now = Date.now();
-      const isJackpot = Math.random() < 0.08;
-      value += isJackpot ? 10 : 1;
-      
-      numberEl.className = isJackpot ? "flash" : "tap-green";
-      playPulse(isJackpot ? 880 : 440, 0.1, 0.15);
-      if (navigator.vibrate) navigator.vibrate(isJackpot ? [30, 20, 30] : 10);
-      
-      updateDisplay();
-      setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
-      lastTime = now;
-      save();
-    }
-
     function checkMessages(v) {
       const currentCheckpoint = Math.floor(v / 50);
       const passedGhost = ghostUsers.find(g => v === g.score + 1);
@@ -173,6 +160,25 @@
     }
 
     function save() { localStorage.setItem("value", value); }
+
+    function handleAction(e) {
+      if (!audioCtx) initAudio();
+      if (e.target.tagName === 'A') return; // リンククリック時は反応させない
+      if (e.cancelable) e.preventDefault();
+      
+      const now = Date.now();
+      const isJackpot = Math.random() < 0.08;
+      value += isJackpot ? 10 : 1;
+      
+      numberEl.className = isJackpot ? "flash" : "tap-green";
+      playPulse(isJackpot ? 880 : 440, 0.1, 0.15);
+      if (navigator.vibrate) navigator.vibrate(isJackpot ? [30, 20, 30] : 10);
+      
+      updateDisplay();
+      setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
+      lastTime = now;
+      save();
+    }
 
     setInterval(() => {
       if (Date.now() - lastTime > 1200 && value > 0) {
