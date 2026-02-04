@@ -1,112 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<title>Swipe</title>
-<style>
-  html,body{
-    margin:0; padding:0; height:100%;
-    background:#000; color:#eaeaea;
-    font-family: system-ui, -apple-system, sans-serif;
-    overflow:hidden; touch-action: none;
-  }
-  #app{
-    height:100%; display:flex;
-    justify-content:center; align-items:center;
-    flex-direction:column; transition: background 0.1s;
-  }
-  #count{
-    font-size:64px; letter-spacing:1px; user-select:none;
-    transition: transform 0.05s, color 0.1s;
-  }
-  #streak-ui {
-    position: fixed; top: 60px; font-size: 14px; color: #ff3e3e;
-    font-weight: bold; opacity: 0; transition: opacity 0.2s;
-  }
-  #hint{ position:fixed; top:16px; font-size:12px; color:#555; user-select:none; }
-  #message{
-    position:fixed; top:40%; width:100%; text-align:center;
-    font-size:16px; color:#777; opacity:0; pointer-events:none;
-  }
-  footer{ position:fixed; bottom:60px; width:100%; text-align:center; font-size:12px; color:#666; }
-  footer a{ color:#666; margin:0 8px; text-decoration:none; }
-  #ad{
-    position:fixed; bottom:0; width:100%; height:60px;
-    background:#111; color:#555; display:flex;
-    justify-content:center; align-items:center; font-size:12px; opacity:.4;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Swipe Number</title>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      background: radial-gradient(circle at center, #111 0%, #000 70%);
+      color: #fff; font-family: system-ui, sans-serif;
+      overflow: hidden; touch-action: none;
+    }
+
+    #container {
+      height: 100%; display: flex;
+      flex-direction: column; justify-content: space-between; align-items: center;
+    }
+
+    #number {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      font-size: 80px; font-weight: 900; letter-spacing: 2px;
+      transition: transform 0.05s, color 0.1s;
+      user-select: none;
+    }
+
+    /* 視覚エフェクト */
+    .pulse { transform: scale(1.15); color: #fff; }
+    .flash { color: #ff00ff !important; text-shadow: 0 0 20px #ff00ff; transform: scale(1.4) !important; }
+    
+    /* ストリーク切れの演出用 */
+    .cold { color: #444 !important; }
+
+    #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; pointer-events: none; }
+
+    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
+
+    .reward {
+      position: absolute; font-size: 20px; font-weight: bold;
+      color: #ff00ff; pointer-events: none;
+      animation: pop 0.6s ease-out forwards;
+    }
+
+    @keyframes pop {
+      0% { opacity: 0; transform: translateY(0) scale(0.5); }
+      50% { opacity: 1; transform: translateY(-50px) scale(1.2); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1); }
+    }
+  </style>
 </head>
+
 <body>
-<div id="app">
-  <div id="hint">Swipe or Tap</div>
-  <div id="streak-ui">STREAKING...</div>
-  <div id="count">0</div>
-</div>
-<div id="message"></div>
+  <div id="container">
+    <div class="ad">
+      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
+    </div>
 
-<footer>
-  <a href="about.html">About</a>
-  <a href="privacy.html">Privacy Policy</a>
-  <a href="https://github.com/あなたのユーザー名">Contact</a>
-</footer>
-<div id="ad">Ad Space</div>
+    <div id="number">0</div>
+    <div id="hint">swipe or tap.</div>
 
-<script>
-let count = 0;
-let lastAction = Date.now();
-const countEl = document.getElementById("count");
-const msgEl = document.getElementById("message");
-const appEl = document.getElementById("app");
-const streakUi = document.getElementById("streak-ui");
+    <div class="ad">
+      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
+    </div>
+  </div>
 
-/* 1. 意味なし即反応 + 可変報酬(8%で+10) */
-function increment() {
-  const now = Date.now();
-  const delta = now - lastAction;
-  
-  // ストリーク判定（テンポ崩すとリセット感が出るよう演出）
-  // 1.5秒以上空くとテンポ崩れとみなす
-  if (delta > 1500) {
-    countEl.style.color = "#555";
-    streakUi.style.opacity = 0;
-  } else {
-    streakUi.style.opacity = 1;
-  }
+  <script>
+    let value = Number(localStorage.getItem("value") || 0);
+    let lastTime = Date.now();
 
-  // 報酬ロジック
-  let add = 1;
-  let isJackpot = false;
-  if (Math.random() < 0.08) {
-    add = 10;
-    isJackpot = true;
-  }
-  
-  count += add;
-  countEl.textContent = count;
+    const numberEl = document.getElementById("number");
+    numberEl.textContent = value.toLocaleString();
 
-  /* 2. 視覚＋振動フィードバック */
-  // 振動
-  if (navigator.vibrate) {
-    isJackpot ? navigator.vibrate([50, 30, 50]) : navigator.vibrate(10);
-  }
+    // 1. 意味なし即反応：スワイプ＝必ず増える
+    // pointer系を使うことでマウス・タッチ両方の「離した瞬間」を最速検知
+    let isDown = false;
+    document.addEventListener("pointerdown", () => { isDown = true; });
+    document.addEventListener("pointerup", (e) => {
+      if (!isDown) return;
+      increment(e);
+      isDown = false;
+    });
 
-  // 数字肥大・色変化
-  const scale = isJackpot ? 1.5 : 1.1;
-  const color = isJackpot ? "#ff00ff" : "#fff";
-  
-  countEl.style.transform = `scale(${scale})`;
-  countEl.style.color = color;
-  if (isJackpot) appEl.style.background = "#1a001a";
+    function increment(e) {
+      const now = Date.now();
+      const delta = now - lastTime;
 
-  setTimeout(() => {
-    countEl.style.transform = "scale(1)";
-    if (isJackpot) appEl.style.background = "#000";
-  }, 50);
+      // 2. ストリーク圧：テンポ(1.2秒)を崩すと色が冷める
+      if (delta > 1200) {
+        numberEl.classList.add("cold");
+      } else {
+        numberEl.classList.remove("cold");
+      }
 
-  lastAction = now;
-}
+      // 3. 可変報酬：8%で+10、それ以外は+1
+      const isJackpot = Math.random() < 0.08;
+      const bonus = isJackpot ? 10 : 1;
+      value += bonus;
+
+      // 4. 視覚＋振動
+      numberEl.textContent = value.toLocaleString();
+      
+      if (isJackpot) {
+        // 大当たり演出
+        numberEl.classList.add("flash");
+        triggerReward(e.clientX, e.clientY);
+        if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+        setTimeout(() => numberEl.classList.remove("flash"), 150);
+      } else {
+        // 通常演出
+        numberEl.classList.add("pulse");
+        if (navigator.vibrate) navigator.vibrate(10);
+        setTimeout(() => numberEl.classList.remove("pulse"), 50);
+      }
+
+      lastTime = now;
+      localStorage.setItem("value", value);
+    }
+
+    function triggerReward(x, y) {
+      const div = document.createElement("div");
+      div.className = "reward";
+      div.textContent = "+10!!";
+      // タ
+
 
 
 
