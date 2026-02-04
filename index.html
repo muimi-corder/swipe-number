@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Void Pulse</title>
+  <title>Void Pulse - 1,000,000 Challenge</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
@@ -14,44 +14,74 @@
     
     /* ランキングボード */
     #ranking-board {
-      position: absolute; top: 60px; left: 15px; width: 180px;
+      position: absolute; top: 60px; left: 15px; width: 185px;
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
-      font-size: 10px; font-family: 'Courier New', monospace; color: #444; pointer-events: none;
-      border-left: 2px solid #222; z-index: 5;
+      font-size: 10px; font-family: 'Courier New', monospace; color: #333; pointer-events: none;
+      border-left: 2px solid #111; z-index: 5;
     }
-    .rank-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-    .rank-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .rank-self { color: #00f5af; font-weight: bold; }
+    .rank-item { 
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 4px; padding: 2px 4px; border-radius: 4px; transition: all 0.3s;
+    }
+    /* 1位の強調演出 */
+    .rank-item:first-child {
+      background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 11px;
+      border: 1px solid rgba(255, 255, 255, 0.1); animation: top-glow 3s infinite ease-in-out;
+    }
+    .rank-item:first-child .rank-name::before { content: "👑 "; font-size: 10px; opacity: 0.8; }
+    @keyframes top-glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.05); }
+      50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.15); }
+    }
 
-    /* 中央メッセージ */
+    .rank-name { max-width: 105px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-self { color: #00f5af !important; font-weight: bold; }
+
+    /* メッセージ領域 */
     #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
-    #message { font-size: 16px; color: #555; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.1s; text-align: center; }
+    #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.1s; text-align: center; }
     .show-msg { opacity: 1 !important; }
 
     /* メイン数字 */
     #number { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; z-index: 1; transition: transform 0.05s ease; }
     
-    /* 同期カラー */
+    /* タップ演出カラー */
     .active { color: #fff; }
-    .tap-green { color: #00f5af !important; transform: scale(1.1) !important; }
-    .flash { color: #ffff00 !important; transform: scale(1.2) !important; }
-    .penalty { color: #ff3b30 !important; transform: scale(0.9) !important; }
+    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
+    .flash { color: #ffff00 !important; transform: scale(1.15) !important; }
+    .penalty { color: #ff3b30 !important; transform: scale(0.95) !important; }
 
-    /* フッター：リンクを復活 */
-    footer { 
-      position: absolute; bottom: 70px; width: 100%; text-align: center; 
-      font-size: 10px; color: #333; z-index: 20;
+    /* 100万達成後の呪い（真鍮色） */
+    .curse-mode { 
+      color: #b8860b !important; 
+      text-shadow: 0 0 15px rgba(184, 134, 11, 0.3);
+      animation: curse-pulse 4s infinite ease-in-out;
     }
-    footer a { color: #555; margin: 0 8px; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
-    footer a:hover { color: #888; }
+    @keyframes curse-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-    #status { position: absolute; bottom: 100px; width: 100%; text-align: center; font-size: 8px; color: #111; pointer-events: none; }
+    /* 自慢モード（長押し） */
+    #evidence-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8); display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      z-index: 100; box-sizing: border-box;
+    }
+    .evidence-text { font-size: 16px; color: #00f5af; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+
+    footer { position: absolute; bottom: 70px; width: 100%; text-align: center; font-size: 10px; z-index: 20; }
+    footer a { color: #222; margin: 0 8px; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
 <body>
   <div id="container">
+    <div id="evidence-overlay">
+      <div class="evidence-text">Evidence Mode</div>
+      <div id="waste-time" class="evidence-text" style="font-size: 24px;"></div>
+      <div style="font-size: 10px; color: #444; text-transform: uppercase;">Unfiltered Void Data</div>
+    </div>
+
     <div id="ranking-board">
-      <div style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#333; font-size: 9px;">TOP 10 TIME WASTERS</div>
+      <div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
     
@@ -59,40 +89,46 @@
     
     <div id="number">0</div>
 
-    <div id="status">INITIATING PULSE...</div>
-
     <footer>
       <a href="#">About</a>
       <a href="#">Privacy</a>
-      <a href="https://www.tiktok.com/">TikTok</a> </footer>
+      <a href="https://www.tiktok.com/">TikTok</a>
+    </footer>
   </div>
 
   <script>
     let value = Number(localStorage.getItem("value") || 0);
+    let totalTaps = Number(localStorage.getItem("totalTaps") || 0);
     let lastTime = Date.now();
     let lastCheckpoint = Math.floor(value / 50);
+    
+    let audioCtx = null, brownNoise = null;
+    let isPausing = false, pauseTimer = null;
+
     const numberEl = document.getElementById("number");
     const messageEl = document.getElementById("message");
     const ranksEl = document.getElementById("ranks");
+    const evidenceOverlay = document.getElementById("evidence-overlay");
+    const wasteTimeEl = document.getElementById("waste-time");
 
-    let audioCtx = null;
-    let brownNoise = null;
-
+    // 固定ライバルデータ
     const ghostUsers = [
-      { name: "TOUCH_GRASS", score: 999999 }, { name: "NO_SOCIAL_LIFE", score: 850200 },
-      { name: "MR_VOID", score: 620110 }, { name: "GET_A_JOB", score: 220500 },
-      { name: "WHY_THO", score: 115000 }, { name: "BOT_OR_SAD", score: 52000 },
-      { name: "WASTED_TIME", score: 18000 }, { name: "KEEP_DREAMING", score: 5000 },
+      { name: "TOUCH_GRASS", score: 999999 },
+      { name: "NO_SOCIAL_LIFE", score: 850200 },
+      { name: "MR_VOID", score: 620110 },
+      { name: "GET_A_JOB", score: 220500 },
+      { name: "WHY_THO", score: 115000 },
+      { name: "BOT_OR_SAD", score: 52000 },
+      { name: "WASTED_TIME", score: 18000 },
+      { name: "KEEP_DREAMING", score: 5000 },
       { name: "NEW_LOSER", score: 1200 }
     ];
 
-    const randomInsults = ["BRAIN ROT.", "ZERO VALUE.", "OBSESSED.", "KEEP GOING.", "POOR SOUL.", "WHY?"];
-
+    // ブラウンノイズ（没入・集中用）
     function initAudio() {
       if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const bufferSize = 4096;
-      let lastOut = 0.0;
+      const bufferSize = 4096; let lastOut = 0.0;
       brownNoise = audioCtx.createScriptProcessor(bufferSize, 1, 1);
       brownNoise.onaudioprocess = (e) => {
         const output = e.outputBuffer.getChannelData(0);
@@ -104,9 +140,9 @@
         }
       };
       brownNoise.connect(audioCtx.destination);
-      document.getElementById('status').textContent = "PULSE ACTIVE";
     }
 
+    // パルス音（タップ・警告用）
     function playPulse(freq, duration, vol) {
       if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
@@ -115,40 +151,50 @@
       osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
       gain.gain.setValueAtTime(vol, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
     function updateDisplay() {
-      const floorVal = Math.floor(value);
-      numberEl.textContent = floorVal.toLocaleString();
-      checkMessages(floorVal);
-      updateRanking(floorVal);
+      const v = Math.floor(value);
+      if (v >= 1000000) {
+        numberEl.textContent = "GO TO WORK";
+        numberEl.style.fontSize = "45px";
+        numberEl.classList.add("curse-mode");
+      } else {
+        numberEl.textContent = v.toLocaleString();
+        numberEl.style.fontSize = "90px";
+        numberEl.classList.remove("curse-mode");
+      }
+      checkMessages(v);
+      updateRanking(v);
     }
 
     function updateRanking(current) {
       let combined = [...ghostUsers, { name: "YOU", score: current }].sort((a, b) => b.score - a.score);
-      ranksEl.innerHTML = combined.slice(0, 10).map((u, i) => 
-        `<div class="rank-item ${u.name === 'YOU' ? 'rank-self' : ''}">
-          <span class="rank-name">${i + 1}. ${u.name}</span>
-          <span>${u.score.toLocaleString()}</span>
-        </div>`
-      ).join('');
+      ranksEl.innerHTML = combined.slice(0, 10).map((u, i) => {
+        const isSelf = u.name === 'YOU';
+        const scoreVal = (isSelf && current >= 1000000) ? "DEAD" : u.score.toLocaleString();
+        return `
+          <div class="rank-item ${isSelf ? 'rank-self' : ''}">
+            <span class="rank-name">${i + 1}. ${u.name}</span>
+            <span>${scoreVal}</span>
+          </div>`;
+      }).join('');
     }
 
     function checkMessages(v) {
+      if (v >= 1000000) return;
       const currentCheckpoint = Math.floor(v / 50);
       const passedGhost = ghostUsers.find(g => v === g.score + 1);
-      
       if (passedGhost) {
-        messageEl.style.color = "#ffff00";
+        messageEl.style.color = "#880";
         showMessage(`BYE BYE, ${passedGhost.name}.`, 1500);
         playPulse(1200, 0.5, 0.1);
       } else if (currentCheckpoint > lastCheckpoint) {
-        messageEl.style.color = "#555";
-        showMessage(randomInsults[Math.floor(Math.random() * randomInsults.length)], 800);
+        messageEl.style.color = "#444";
+        const insults = ["WASTE.", "ZERO VALUE.", "WHY?", "STILL HERE?"];
+        showMessage(insults[Math.floor(Math.random() * insults.length)], 800);
         lastCheckpoint = currentCheckpoint;
       }
     }
@@ -159,20 +205,27 @@
       setTimeout(() => messageEl.classList.remove("show-msg"), duration);
     }
 
-    function save() { localStorage.setItem("value", value); }
-
-    function handleAction(e) {
+    function handleStart(e) {
       if (!audioCtx) initAudio();
-      if (e.target.tagName === 'A') return; // リンククリック時は反応させない
-      if (e.cancelable) e.preventDefault();
+      if (e.target.tagName === 'A') return;
       
+      // 自慢モード（長押し）検知
+      isPausing = false;
+      pauseTimer = setTimeout(() => {
+        isPausing = true;
+        const totalMinutes = Math.floor(totalTaps / 60);
+        wasteTimeEl.textContent = `${totalMinutes} MINS WASTED`;
+        evidenceOverlay.style.display = "flex";
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 800);
+
       const now = Date.now();
       const isJackpot = Math.random() < 0.08;
       value += isJackpot ? 10 : 1;
+      totalTaps++;
       
       numberEl.className = isJackpot ? "flash" : "tap-green";
-      playPulse(isJackpot ? 880 : 440, 0.1, 0.15);
-      if (navigator.vibrate) navigator.vibrate(isJackpot ? [30, 20, 30] : 10);
+      playPulse(isJackpot ? 660 : 330, 0.1, 0.1);
       
       updateDisplay();
       setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
@@ -180,8 +233,20 @@
       save();
     }
 
+    function handleEnd() {
+      clearTimeout(pauseTimer);
+      isPausing = false;
+      evidenceOverlay.style.display = "none";
+    }
+
+    function save() { 
+      localStorage.setItem("value", value); 
+      localStorage.setItem("totalTaps", totalTaps);
+    }
+
+    // 1.2秒ごとのペナルティ減少
     setInterval(() => {
-      if (Date.now() - lastTime > 1200 && value > 0) {
+      if (!isPausing && Date.now() - lastTime > 1200 && value > 0) {
         value -= 1;
         numberEl.className = "penalty";
         playPulse(110, 0.2, 0.05);
@@ -190,8 +255,12 @@
       }
     }, 1200);
 
-    document.addEventListener("touchend", handleAction, { passive: false });
-    document.addEventListener("mouseup", handleAction);
+    // イベントリスナー
+    document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
+    document.addEventListener("touchend", handleEnd);
+    document.addEventListener("mousedown", handleStart);
+    document.addEventListener("mouseup", handleEnd);
+    
     updateDisplay();
   </script>
 </body>
