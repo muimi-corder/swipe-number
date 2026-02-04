@@ -12,6 +12,10 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
     
+    /* 広告用スペース（上部バナー想定） */
+    .ad-slot-top { width: 100%; height: 50px; background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: center; font-size: 8px; color: #222; z-index: 100; }
+
+    /* ランキングボード */
     #ranking-board {
       position: absolute; top: 60px; left: 15px; min-width: 200px;
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
@@ -27,35 +31,26 @@
     @keyframes top-glow { 0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.05); } 50% { box-shadow: 0 0 12px rgba(255,255,255,0.15); } }
     .rank-self { color: #00f5af !important; font-weight: bold; }
 
+    /* メイン数字エリア */
     #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; }
     #number { font-size: 90px; font-weight: 900; transition: color 0.1s; }
-    
-    /* スコア用追加：DEAD時に同時に震える */
-    #final-waste { 
-      font-size: 14px; color: #ff0000; font-weight: 900; margin-top: 15px; 
-      opacity: 0; letter-spacing: 1px;
-    }
+    #final-waste { font-size: 14px; color: #ff0000; font-weight: 900; margin-top: 15px; opacity: 0; letter-spacing: 1px; }
     
     .tap-anim { animation: tap-pulse 0.1s ease-out; }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-    /* DEADスクショ用：文字と時間を同時に激しく揺らす */
-    .glitch-active {
-      animation: glitch-dead 0.1s infinite !important;
-      text-shadow: 2.5px 0 #fff, -2.5px 0 #ff0000;
-    }
-    @keyframes glitch-dead {
-      0% { transform: translate(2px, -2px); }
-      50% { transform: translate(-2px, 2px); }
-      100% { transform: translate(1px, -1px); }
-    }
+    /* DEADスクショ用グリッチ */
+    .glitch-active { animation: glitch-dead 0.1s infinite !important; text-shadow: 2.5px 0 #fff, -2.5px 0 #ff0000; }
+    @keyframes glitch-dead { 0% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 100% { transform: translate(1px, -1px); } }
     .dead-stable { color: #b8860b !important; opacity: 0.8; animation: none !important; }
     .dead-stable-text { color: #b8860b !important; opacity: 0.6; animation: none !important; }
 
+    /* 煽りメッセージ */
     #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
     #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
     .show-msg { opacity: 1 !important; }
 
+    /* スマート自慢モード */
     #evidence-overlay {
       position: absolute; bottom: 120px; width: auto; 
       background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px;
@@ -66,22 +61,50 @@
     .show-evidence { opacity: 1 !important; transform: translateY(0) !important; }
     .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
 
-    footer { position: absolute; bottom: 70px; width: 100%; text-align: center; font-size: 10px; z-index: 20; opacity: 0.3; }
+    /* 下部広告枠（アンカー広告想定） */
+    .ad-slot-bottom { width: 100%; height: 60px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; border-top: 1px solid #111; z-index: 100; font-size: 9px; color: #222; }
+    footer { padding-bottom: 10px; width: 100%; text-align: center; font-size: 10px; z-index: 20; opacity: 0.3; }
   </style>
 </head>
 <body>
   <div id="container">
+    <div class="ad-slot-top">AD SPACE (TOP)</div>
+    
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
-    <div id="ranking-board"><div id="ranks"></div></div>
+    
+    <div id="ranking-board">
+        <div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;"></div>
+        <div id="ranks"></div>
+        <div style="font-size:7px; margin-top:5px; color:#111; text-align:center;">SPONSORED LINKS</div>
+    </div>
+
     <div id="message-container"><div id="message"></div></div>
+    
     <div id="display-area">
       <div id="number">0</div>
       <div id="final-waste"></div>
     </div>
-    <footer>About / Privacy / TikTok</footer>
+
+    <div class="ad-slot-bottom">AD SPACE (ANCHOR)</div>
+    <footer id="footer-links"></footer>
   </div>
 
   <script>
+    // 言語設定と多言語辞書
+    const userLang = navigator.language.toLowerCase();
+    let lang = 'en';
+    if (userLang.startsWith('ja')) lang = 'ja';
+    else if (userLang.startsWith('zh')) lang = 'zh';
+    else if (userLang.startsWith('ko')) lang = 'ko';
+
+    const i18n = {
+      ja: { dead: "働け", wasted: "合計損失時間", wasted_short: "無駄にした時間", rank_title: "時間の無駄遣いランキング", insults: ["無駄。", "価値ゼロ。", "何故？", "まだいるの？"], you: "あなた" },
+      en: { dead: "GO TO WORK", wasted: "TOTAL WASTED", wasted_short: "WASTED", rank_title: "TOP 10 TIME WASTERS", insults: ["WASTE.", "ZERO VALUE.", "WHY?", "STILL HERE?"], you: "YOU" },
+      zh: { dead: "去工作吧", wasted: "总共浪费的时间", wasted_short: "浪费时间", rank_title: "浪费时间排行榜 TOP 10", insults: ["无用。", "毫无价值。", "为什么？", "还在看？"], you: "你" },
+      ko: { dead: "일이나 해", wasted: "총 낭비한 시간", wasted_short: "시간 낭비", rank_title: "시간 낭비 랭킹 TOP 10", insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?"], you: "당신" }
+    };
+    const t = i18n[lang];
+
     let value = Number(localStorage.getItem("value") || 0);
     let totalTaps = Number(localStorage.getItem("totalTaps") || 0);
     let lastTime = Date.now();
@@ -92,8 +115,8 @@
     const numberEl = document.getElementById("number");
     const finalWasteEl = document.getElementById("final-waste");
     const ranksEl = document.getElementById("ranks");
-    const evidenceOverlay = document.getElementById("evidence-overlay");
-    const wasteTimeEl = document.getElementById("waste-time");
+    document.getElementById("rank-title").textContent = t.rank_title;
+    document.getElementById("footer-links").innerHTML = `About / Privacy / TikTok`;
 
     const ghostUsers = [
       { name: "TOUCH_GRASS", score: 999999 }, { name: "NO_SOCIAL_LIFE", score: 850200 },
@@ -143,15 +166,12 @@
     }
 
     function triggerDeadEvent() {
-      numberEl.textContent = "GO TO WORK";
-      numberEl.style.fontSize = "45px";
-      finalWasteEl.textContent = `TOTAL WASTED: ${Math.floor(totalTaps / 60)} MINS`;
+      numberEl.textContent = t.dead;
+      numberEl.style.fontSize = lang === 'ja' || lang === 'zh' || lang === 'ko' ? "80px" : "45px";
+      finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
       finalWasteEl.style.opacity = "1";
-      
-      // スクショ用：文字と時間を同時にグリッチ
       numberEl.classList.add("glitch-active");
       finalWasteEl.classList.add("glitch-active");
-      
       setTimeout(() => {
         numberEl.classList.remove("glitch-active");
         finalWasteEl.classList.remove("glitch-active");
@@ -161,9 +181,9 @@
     }
 
     function updateRanking(current) {
-      let combined = [...ghostUsers, { name: "YOU", score: current }].sort((a, b) => b.score - a.score);
+      let combined = [...ghostUsers, { name: t.you, score: current }].sort((a, b) => b.score - a.score);
       ranksEl.innerHTML = combined.slice(0, 10).map((u, i) => {
-        const isSelf = u.name === 'YOU';
+        const isSelf = u.name === t.you;
         let scoreVal = u.score.toLocaleString();
         if (isSelf && current >= 1000000) scoreVal = "DEAD";
         return `<div class="rank-item ${isSelf ? 'rank-self' : ''}"><span>${i + 1}. ${u.name}</span><span>${scoreVal}</span></div>`;
@@ -173,8 +193,7 @@
     function checkMessages(v) {
       const currentCheckpoint = Math.floor(v / 50);
       if (currentCheckpoint > lastCheckpoint) {
-        const insults = ["WASTE.", "ZERO VALUE.", "WHY?", "STILL HERE?"];
-        document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
+        document.getElementById("message").textContent = t.insults[Math.floor(Math.random() * t.insults.length)];
         document.getElementById("message").classList.add("show-msg");
         setTimeout(() => document.getElementById("message").classList.remove("show-msg"), 800);
         lastCheckpoint = currentCheckpoint;
@@ -197,10 +216,10 @@
     setInterval(() => {
       const idleTime = Date.now() - lastTime;
       if (idleTime > 3000) {
-        wasteTimeEl.textContent = `WASTED: ${Math.floor(totalTaps / 60)} MINS`;
-        if (!isDead) evidenceOverlay.classList.add("show-evidence");
+        document.getElementById("waste-time").textContent = `${t.wasted_short}: ${Math.floor(totalTaps / 60)} MINS`;
+        if (!isDead) document.getElementById("evidence-overlay").classList.add("show-evidence");
       } else {
-        evidenceOverlay.classList.remove("show-evidence");
+        document.getElementById("evidence-overlay").classList.remove("show-evidence");
       }
       if (idleTime > 10000 && value > 0 && !isDead) {
         value -= 1;
@@ -213,10 +232,10 @@
     document.addEventListener("mousedown", handleStart);
     
     if (isDead) {
-        numberEl.textContent = "GO TO WORK";
-        numberEl.style.fontSize = "45px";
+        numberEl.textContent = t.dead;
+        numberEl.style.fontSize = lang === 'ja' || lang === 'zh' || lang === 'ko' ? "80px" : "45px";
         numberEl.classList.add("dead-stable");
-        finalWasteEl.textContent = `TOTAL WASTED: ${Math.floor(totalTaps / 60)} MINS`;
+        finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
         finalWasteEl.style.opacity = "1";
         finalWasteEl.classList.add("dead-stable-text");
     }
