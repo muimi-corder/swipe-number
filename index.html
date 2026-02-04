@@ -3,192 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
-  <title>Void Pulse | 究極の暇つぶし連打ゲーム</title>
-  <meta name="description" content="ひたすら数字を増やすだけの究極の暇つぶし。100万回タップの虚無の先に何があるのか？スマホ・PC対応。">
-  <meta name="keywords" content="連打ゲーム,暇つぶし,クリック,測定,100万回,Void Pulse">
-
+  <title>Void Pulse | 4-Min Eternity</title>
   <style>
-    /* 既存のレイアウト維持 */
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; position: relative; }
-    #header-links { width: 100%; padding: 15px 0; text-align: center; font-size: 10px; z-index: 100; opacity: 0.5; position: relative; }
-    #header-links a { color: #fff; text-decoration: none; margin: 0 15px; pointer-events: auto; display: inline-block; }
-    #ranking-board { position: absolute; top: 60px; left: 15px; min-width: 180px; background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px; font-size: 10px; font-family: 'Courier New', monospace; color: #333; pointer-events: none; border-left: 2px solid #111; z-index: 5; }
-    .rank-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 2px 4px; border-radius: 4px; }
-    .rank-self { color: #00f5af !important; font-weight: bold; }
-    #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; width: 100%; position: relative; }
-    #number { font-size: 90px; font-weight: 900; transition: color 0.1s; }
+    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    #number { font-size: 80px; font-weight: 900; transition: color 0.1s; margin: 20px 0; }
+    #message { font-size: 14px; color: #666; font-weight: 900; height: 24px; text-transform: uppercase; }
+    #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: #00f5af; width: 0%; transition: width 0.1s; }
     
-    /* オーバーヒート用オーバーレイ */
-    #overheat-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 0, 0, 0.2); backdrop-filter: blur(20px);
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 2000; text-align: center;
+    /* 哲学画面の演出 */
+    #final-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+    #philosophy { font-size: 18px; line-height: 1.8; color: #ccc; margin-bottom: 40px; max-width: 500px; }
+    
+    /* 投げ銭ボタン */
+    .donate-btn {
+      padding: 15px 30px; background: #fff; color: #000; font-weight: 900; text-decoration: none; border-radius: 50px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2); transition: transform 0.2s;
     }
-    #ad-box {
-      width: 300px; height: 250px; background: #111; border: 1px solid #ff3b30;
-      margin-bottom: 20px; display: flex; align-items: center; justify-content: center; color: #444; font-size: 12px;
-    }
-    .cool-button {
-      padding: 15px 40px; background: #ff3b30; color: #fff; font-weight: 900;
-      border: none; border-radius: 50px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px;
-    }
-
+    .donate-btn:active { transform: scale(0.95); }
+    
     .tap-anim { animation: tap-pulse 0.1s ease-out; }
-    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-    #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
-    .show-msg { opacity: 1 !important; }
-    #evidence-overlay { position: absolute; bottom: 80px; background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px; display: flex; opacity: 0; transform: translateY(10px); transition: opacity 0.5s, transform 0.5s; border: 1px solid #00f5af; z-index: 50; pointer-events: none; }
-    .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
+    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
+  <div id="progress-bar"></div>
   <div id="container">
-    <header id="header-links"></header>
-    <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
-    <div id="ranking-board"><div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;"></div><div id="ranks"></div></div>
-    <div id="display-area">
-      <div id="message"></div>
-      <div id="number">0</div>
-      <div id="final-waste" style="font-size: 14px; color: #ff0000; margin-top: 15px; opacity: 0;"></div>
-    </div>
+    <div id="message">TAP TO START</div>
+    <div id="number">0</div>
   </div>
 
-  <div id="overheat-overlay">
-    <div style="color: #ff3b30; font-weight: 900; font-size: 24px; margin-bottom: 10px;">OVERHEAT</div>
-    <div id="ad-box">
-      ADVERTISEMENT SPACE
-    </div>
-    <button class="cool-button" onclick="coolDown()">RECOVERY (AD)</button>
+  <div id="final-screen">
+    <div id="philosophy"></div>
+    <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-btn">投げ銭で虚無を支援する</a>
   </div>
 
   <script>
-    const userLang = navigator.language.toLowerCase();
-    let lang = userLang.startsWith('ja') ? 'ja' : 'en';
-    const i18n = {
-      ja: { dead: "働け", wasted: "合計損失時間", wasted_short: "無駄にした時間", rank_title: "時間の無駄遣いランキング", you: "あなた", insults: ["無駄。", "価値ゼロ。", "何故？", "まだいるの？", "虚無。"], ghosts: ["ニートの神", "虚無の王", "指の亡霊", "人生放棄者", "スマホ中毒者", "時間の守護者", "孤独なランナー", "画面の奴隷", "無職の星", "タップマシン"] },
-      en: { dead: "GO TO WORK", wasted: "TOTAL WASTED", wasted_short: "WASTED", rank_title: "TOP 10 TIME WASTERS", you: "YOU", insults: ["WASTE.", "ZERO VALUE.", "WHY?", "EMPTY."], ghosts: ["NEET_LORD", "VOID_KING", "GHOST_TAPPER", "LIFE_LEAVER", "PHONE_ADDICT", "TIME_KEEPER", "LONELY_RUNNER", "SCREEN_SLAVE", "JOBLESS_STAR", "TAP_MACHINE"] }
-    };
-    const t = i18n[lang];
-    let value = Number(localStorage.getItem("value") || 0);
-    let totalTaps = Number(localStorage.getItem("totalTaps") || 0);
-    let heat = 0; 
-    const MAX_HEAT = 5000; 
-    let isOverheating = false;
-    let lastTime = Date.now();
-    let isDead = value >= 1000000;
-    let audioCtx = null, noiseNode = null, noiseGain = null;
+    let value = 0;
+    let startTime = null;
+    let isFinished = false;
+    const DURATION = 240000; // 4分（ミリ秒）
+    const TARGET = 1000000;
 
-    document.getElementById("rank-title").textContent = t.rank_title;
-    document.getElementById("header-links").innerHTML = `<a href="about.html">About</a> <a href="privacy.html">Privacy</a> <a href="https://www.tiktok.com/">TikTok</a>`;
-    const ghostUsers = [999999, 850200, 620110, 220500, 115000, 52000, 18000, 5000, 1200].map((s, i) => ({ name: t.ghosts[i], score: s }));
+    const insults = ["もっと速く。", "その程度？", "指が止まってるぞ。", "無駄な努力だ。", "加速しろ。", "時間は過ぎていく。", "まだ半分もいってない。", "必死だな。"];
+    const philosophyText = "「君が積み上げた1,000,000という数字には何の意味もない。だが、そのために君が捨てた『4分間』という時間は、二度と戻らない君の命そのものだ。虚無へようこそ。」";
 
-    function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); startBrownNoise(); } }
-    function startBrownNoise() {
-      const bufferSize = 2 * audioCtx.sampleRate;
-      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      let lastOut = 0.0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = output[i]; output[i] *= 3.5;
-      }
-      noiseNode = audioCtx.createBufferSource();
-      noiseNode.buffer = noiseBuffer; noiseNode.loop = true;
-      noiseGain = audioCtx.createGain();
-      noiseGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-      noiseNode.connect(noiseGain); noiseGain.connect(audioCtx.destination);
-      noiseNode.start();
-    }
+    function update() {
+      if (isFinished) return;
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / DURATION, 1);
+      
+      // プログレスバー更新
+      document.getElementById("progress-bar").style.width = (progress * 100) + "%";
 
-    function triggerPulse(freq, vol, colorClass) {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-      document.getElementById("number").classList.remove("tap-anim");
-      void document.getElementById("number").offsetWidth; document.getElementById("number").classList.add("tap-anim");
-      if (colorClass && !isDead) {
-        const el = document.getElementById("number");
-        if (colorClass === 'yellow') el.style.color = '#ffff00';
-        else if (colorClass === 'green') el.style.color = '#00f5af';
-        else if (colorClass === 'red') el.style.color = '#ff3b30';
-        setTimeout(() => { if (!isDead) el.style.color = '#fff'; }, 100);
-      }
-    }
-
-    function handleStart(e) {
-      if (!audioCtx) initAudio();
-      if (e.target.tagName === 'A' || isDead || isOverheating) return;
-
-      heat++;
-      if (heat >= MAX_HEAT) {
-        isOverheating = true;
-        document.getElementById("overheat-overlay").style.display = "flex";
-        if (noiseGain) noiseGain.gain.setTargetAtTime(0.2, audioCtx.currentTime, 0.1);
+      if (progress >= 1 || value >= TARGET) {
+        finish();
         return;
       }
 
-      const isJackpot = Math.random() < 0.08;
-      if (isJackpot) {
-        value += 10; triggerPulse(660, 0.1, 'yellow');
-        const f = document.createElement("div"); f.textContent = "+10"; f.className = "floating";
-        f.style.position = "absolute"; f.style.color = "#ffff00"; f.style.top = "45%"; f.style.left = "65%";
-        document.body.appendChild(f);
-        setTimeout(() => { f.style.transition = "0.6s"; f.style.transform = "translateY(-40px)"; f.style.opacity = "0"; }, 50);
-        setTimeout(() => f.remove(), 600);
+      // 煽りメッセージ
+      if (Math.floor(value) % 500 === 0) {
+        document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
+      }
+    }
+
+    function handleTap() {
+      if (isFinished) return;
+      if (!startTime) {
+        startTime = Date.now();
+        setInterval(update, 100);
+      }
+
+      const elapsed = Date.now() - startTime;
+      const progress = elapsed / DURATION;
+
+      // タップあたりの増加量ロジック
+      // 最初は爆速(1000+), 中盤から減衰し、最後は1とかになる
+      let increment;
+      if (progress < 0.5) {
+        increment = 2000 * (1 - progress); // 最初は一気に増える
       } else {
-        value += 1; triggerPulse(330, 0.1, 'green');
+        increment = Math.max(1, 500 * Math.pow(1 - progress, 2)); // 徐々に鈍化
       }
-      totalTaps++; lastTime = Date.now(); updateDisplay(true);
-      localStorage.setItem("value", value); localStorage.setItem("totalTaps", totalTaps);
-    }
 
-    function coolDown() {
-      heat = 0;
-      isOverheating = false;
-      document.getElementById("overheat-overlay").style.display = "none";
-      if (noiseGain) noiseGain.gain.setTargetAtTime(0.02, audioCtx.currentTime, 0.5);
-    }
-
-    function updateDisplay(isTapping = false) {
-      const v = Math.floor(value);
-      if (v >= 1000000 && !isDead) {
-        isDead = true; document.getElementById("number").textContent = t.dead;
-      } else if (!isDead) {
-        document.getElementById("number").textContent = v.toLocaleString();
-      }
-      let combined = [...ghostUsers, { name: t.you, score: v }].sort((a, b) => b.score - a.score);
-      document.getElementById("ranks").innerHTML = combined.slice(0, 10).map((u, i) => `<div class="rank-item ${u.name === t.you ? 'rank-self' : ''}"><span>${i+1}. ${u.name}</span><span>${u.score.toLocaleString()}</span></div>`).join('');
+      value += increment;
       
-      // 煽り文メッセージの制御
-      if (isTapping && v > 0 && v % 100 === 0 && !isDead) {
-        const msg = document.getElementById("message");
-        msg.textContent = t.insults[Math.floor(Math.random() * t.insults.length)];
-        msg.classList.add("show-msg");
-        setTimeout(() => msg.classList.remove("show-msg"), 1000);
-      }
+      const numEl = document.getElementById("number");
+      numEl.textContent = Math.floor(Math.min(value, TARGET)).toLocaleString();
+      numEl.classList.remove("tap-anim");
+      void numEl.offsetWidth;
+      numEl.classList.add("tap-anim");
     }
 
-    setInterval(() => {
-      const idleTime = Date.now() - lastTime;
-      if (idleTime > 10000 && value > 0 && !isDead) {
-        value -= 1; triggerPulse(110, 0.05, 'red'); updateDisplay(false);
-      }
-      if (idleTime > 3000) document.getElementById("evidence-overlay").style.opacity = "1";
-      else document.getElementById("evidence-overlay").style.opacity = "0";
-      document.getElementById("waste-time").textContent = `${Math.floor(totalTaps/60)} MINS WASTED`;
-    }, 1200);
+    function finish() {
+      isFinished = true;
+      document.getElementById("final-screen").style.display = "flex";
+      document.getElementById("philosophy").textContent = philosophyText;
+    }
 
-    document.addEventListener("touchstart", (e) => { if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
-    document.addEventListener("mousedown", handleStart);
-    updateDisplay();
+    document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleTap(); }, { passive: false });
+    document.addEventListener("mousedown", handleTap);
   </script>
 </body>
 </html>
