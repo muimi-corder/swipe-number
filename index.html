@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   
-  <title>Void Pulse - 1,000,000 Challenge</title>
+  <title>Void Pulse</title>
   <meta property="og:title" content="Void Pulse - 1,000,000 Challenge" />
   <meta property="og:description" content="1,000,000回叩いた先に、救いはない。絶対にクリックしないでください。" />
-  <meta property="og:image" content="https://あなたのサイトURL/og-image.png" />
+  <meta property="og:image" content="https://あなたのサイトURL/og.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="canonical" href="https://あなたの本家URL/" />
+  <link rel="canonical" href="https://あなたのサイトURL/" />
 
   <style>
     html, body {
@@ -54,7 +54,9 @@
     .show-evidence { opacity: 1 !important; transform: translateY(0) !important; }
     .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
 
-    footer { position: absolute; bottom: 70px; width: 100%; text-align: center; font-size: 10px; z-index: 20; opacity: 0.3; }
+    /* リンクをクリック可能に修正 */
+    footer { padding-bottom: 20px; width: 100%; text-align: center; font-size: 10px; z-index: 100; opacity: 0.5; position: relative; }
+    footer a { color: #fff; text-decoration: none; margin: 0 10px; pointer-events: auto; }
   </style>
 </head>
 <body>
@@ -97,7 +99,7 @@
       },
       ko: {
         dead: "일이나 해", wasted: "총 낭비한 시간", wasted_short: "시간 낭비", rank_title: "시간 낭비 랭킹 TOP 10", you: "당신",
-        insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?", "시간의 무덤.", "의미 없어.", "허무함.", "부모님이 운다.", "손가락 아깝다.", "전기 아까워.", "답이 없다.", "시간 낭비의 끝.", "이게 재밌어?", "이력서에 써라.", "허전하네.", "수고했어.", "낭비 전문가.", "밑바닥.", "끝났다.", "이제 그만해."],
+        insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?", "시간의 무덤.", "의미 없어.", "허무함.", "부모님이 운다.", "손가락 아깝다.", "전기 아까워.", "답い 없다.", "시간 낭비의 끝.", "이게 재밌어?", "이력서에 써라.", "허전하네.", "수고했어.", "낭비 전문가.", "밑바닥.", "끝났다.", "이제 그만해."],
         ghosts: ["니트의 신", "허무의 왕", "손가락 망령", "인생 포기자", "폰 중독자", "시간 수호자", "고독한 러너", "화면의 노예", "백수의 별", "클릭 머신"]
       }
     };
@@ -114,7 +116,9 @@
     const finalWasteEl = document.getElementById("final-waste");
     const ranksEl = document.getElementById("ranks");
     document.getElementById("rank-title").textContent = t.rank_title;
-    document.getElementById("footer-links").innerHTML = `About / Privacy / TikTok`;
+    
+    // リンクがクリックできるように設定
+    document.getElementById("footer-links").innerHTML = `<a href="#">About</a> <a href="#">Privacy</a> <a href="#">TikTok</a>`;
 
     const ghostScores = [999999, 850200, 620110, 220500, 115000, 52000, 18000, 5000, 1200];
     const ghostUsers = ghostScores.map((s, i) => ({ name: t.ghosts[i], score: s }));
@@ -179,6 +183,7 @@
 
     function handleStart(e) {
       if (!audioCtx) initAudio();
+      // aタグ（リンク）をクリックした時は数字を増やさない
       if (e.target.tagName === 'A' || isDead) return;
       const isJackpot = Math.random() < 0.08;
       value += isJackpot ? 10 : 1; totalTaps++; lastTime = Date.now();
@@ -195,7 +200,10 @@
       if (idleTime > 10000 && value > 0 && !isDead) { value -= 1; triggerPulse(110, 0.05, 'red'); updateDisplay(false); }
     }, 1200);
 
-    document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
+    document.addEventListener("touchstart", (e) => { 
+        if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); 
+        handleStart(e); 
+    }, { passive: false });
     document.addEventListener("mousedown", handleStart);
     if (isDead) {
       numberEl.textContent = t.dead; numberEl.style.fontSize = lang === 'en' ? "45px" : "80px";
