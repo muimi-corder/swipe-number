@@ -10,7 +10,7 @@
   <meta property="og:image" content="https://あなたのサイトURL/og.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="canonical" href="https://あなたのサイトURL/" />
+  <link rel="canonical" href="https://あなたのサイトURL" />
 
   <style>
     html, body {
@@ -20,7 +20,6 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; }
     
-    /* 上部に移動したリンクエリアのスタイル */
     #header-links { 
       width: 100%; padding: 15px 0; text-align: center; font-size: 10px; 
       z-index: 100; opacity: 0.5; position: relative;
@@ -65,16 +64,12 @@
 <body>
   <div id="container">
     <header id="header-links"></header>
-
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
-    
     <div id="ranking-board">
         <div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;"></div>
         <div id="ranks"></div>
     </div>
-
     <div id="message-container"><div id="message"></div></div>
-    
     <div id="display-area">
       <div id="number">0</div>
       <div id="final-waste"></div>
@@ -107,7 +102,7 @@
       ko: {
         dead: "일이나 해", wasted: "총 낭비한 시간", wasted_short: "시간 낭비", rank_title: "시간 낭비 랭킹 TOP 10", you: "당신",
         insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?", "시간의 무덤.", "의미 없어.", "허무함.", "부모님이 운다.", "손가락 아깝다.", "전기 아까워.", "답이 없다.", "시간 낭비의 끝.", "이게 재밌어?", "이력서에 써라.", "허전하네.", "수고했어.", "낭비 전문가.", "밑바닥.", "끝났다.", "이제 그만해."],
-        ghosts: ["니트의 신", "허무의 왕", "손가락 망령", "인생 포기자", "폰 중독자", "시간 수호자", "고독한 러너", "화면의 노예", "백수의 별", "클릭 머신"]
+        ghosts: ["니ート의 神", "虚無의 王", "손가락 망령", "인생 포기자", "폰 중독자", "시간 수호자", "고독한 러너", "화면의 노예", "백수의 별", "클릭 머신"]
       }
     };
     const t = i18n[lang];
@@ -124,8 +119,12 @@
     const ranksEl = document.getElementById("ranks");
     document.getElementById("rank-title").textContent = t.rank_title;
 
-    // ヘッダーにリンクを正しく挿入
-    document.getElementById("header-links").innerHTML = `<a href="#">About</a> <a href="#">Privacy</a> <a href="#">TikTok</a>`;
+    // ヘッダーにリンクを挿入
+    document.getElementById("header-links").innerHTML = `
+      <a href="about.html">About</a> 
+      <a href="privacy.html">Privacy</a> 
+      <a href="https://www.tiktok.com/@あなたのID">TikTok</a>
+    `;
 
     const ghostScores = [999999, 850200, 620110, 220500, 115000, 52000, 18000, 5000, 1200];
     const ghostUsers = ghostScores.map((s, i) => ({ name: t.ghosts[i], score: s }));
