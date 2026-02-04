@@ -3,34 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Void Pulse | 4-Min Eternity</title>
+  
+  <title>Void Pulse | 1,000,000への挑戦</title>
+  <meta name="description" content="4分間で100万回タップを目指せ。虚無の先にある真実。">
+
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-    #number { font-size: 80px; font-weight: 900; transition: color 0.1s; margin: 20px 0; }
-    #message { font-size: 14px; color: #666; font-weight: 900; height: 24px; text-transform: uppercase; }
-    #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: #00f5af; width: 0%; transition: width 0.1s; }
+    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; position: relative; }
     
-    /* 哲学画面の演出 */
-    #final-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
-    #philosophy { font-size: 18px; line-height: 1.8; color: #ccc; margin-bottom: 40px; max-width: 500px; }
+    #header-links { width: 100%; padding: 15px 0; text-align: center; font-size: 10px; z-index: 100; opacity: 0.5; }
+    #header-links a { color: #fff; text-decoration: none; margin: 0 15px; pointer-events: auto; display: inline-block; }
+
+    #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; width: 100%; }
+    #goal-text { font-size: 12px; color: #00f5af; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; }
+    #number { font-size: 80px; font-weight: 900; transition: color 0.1s; line-height: 1; }
+    #message { font-size: 14px; color: #444; font-weight: 900; height: 24px; margin-top: 10px; text-transform: uppercase; }
     
-    /* 投げ銭ボタン */
+    #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: #00f5af; width: 0%; transition: width 0.1s; box-shadow: 0 0 10px #00f5af; }
+    
+    #final-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    #philosophy { font-size: 16px; line-height: 2; color: #ccc; margin-bottom: 40px; max-width: 500px; font-weight: 300; }
+    
     .donate-btn {
-      padding: 15px 30px; background: #fff; color: #000; font-weight: 900; text-decoration: none; border-radius: 50px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2); transition: transform 0.2s;
+      padding: 18px 36px; background: #fff; color: #000; font-weight: 900; text-decoration: none; border-radius: 50px;
+      text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s;
     }
     .donate-btn:active { transform: scale(0.95); }
-    
-    .tap-anim { animation: tap-pulse 0.1s ease-out; }
-    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    .tap-anim { animation: tap-pulse 0.05s ease-out; }
+    @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
   <div id="progress-bar"></div>
+  
   <div id="container">
-    <div id="message">TAP TO START</div>
-    <div id="number">0</div>
+    <header id="header-links">
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://www.tiktok.com/">TikTok</a>
+    </header>
+
+    <div id="display-area">
+      <div id="goal-text">TARGET: 1,000,000</div>
+      <div id="number">0</div>
+      <div id="message">TAP TO START</div>
+    </div>
   </div>
 
   <div id="final-screen">
@@ -42,29 +60,21 @@
     let value = 0;
     let startTime = null;
     let isFinished = false;
-    const DURATION = 240000; // 4分（ミリ秒）
+    const DURATION = 240000; // 4分
     const TARGET = 1000000;
 
-    const insults = ["もっと速く。", "その程度？", "指が止まってるぞ。", "無駄な努力だ。", "加速しろ。", "時間は過ぎていく。", "まだ半分もいってない。", "必死だな。"];
+    const insults = ["もっと速く。", "無駄な努力だ。", "指、生きてる？", "時間は止まらない。", "加速しろ。", "必死だな。", "まだやるの？", "虚無を積め。"];
     const philosophyText = "「君が積み上げた1,000,000という数字には何の意味もない。だが、そのために君が捨てた『4分間』という時間は、二度と戻らない君の命そのものだ。虚無へようこそ。」";
 
     function update() {
       if (isFinished) return;
-      const now = Date.now();
-      const elapsed = now - startTime;
+      const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / DURATION, 1);
       
-      // プログレスバー更新
       document.getElementById("progress-bar").style.width = (progress * 100) + "%";
 
       if (progress >= 1 || value >= TARGET) {
         finish();
-        return;
-      }
-
-      // 煽りメッセージ
-      if (Math.floor(value) % 500 === 0) {
-        document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
       }
     }
 
@@ -78,19 +88,23 @@
       const elapsed = Date.now() - startTime;
       const progress = elapsed / DURATION;
 
-      // タップあたりの増加量ロジック
-      // 最初は爆速(1000+), 中盤から減衰し、最後は1とかになる
       let increment;
-      if (progress < 0.5) {
-        increment = 2000 * (1 - progress); // 最初は一気に増える
+      if (progress < 0.6) {
+        increment = 1500 * (1 - progress); 
       } else {
-        increment = Math.max(1, 500 * Math.pow(1 - progress, 2)); // 徐々に鈍化
+        increment = Math.max(1, 400 * Math.pow(1 - progress, 2.5)); 
       }
 
       value += increment;
       
       const numEl = document.getElementById("number");
-      numEl.textContent = Math.floor(Math.min(value, TARGET)).toLocaleString();
+      const currentDisplay = Math.floor(Math.min(value, TARGET));
+      numEl.textContent = currentDisplay.toLocaleString();
+      
+      if (currentDisplay % 7 === 0) {
+        document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
+      }
+
       numEl.classList.remove("tap-anim");
       void numEl.offsetWidth;
       numEl.classList.add("tap-anim");
@@ -98,12 +112,20 @@
 
     function finish() {
       isFinished = true;
-      document.getElementById("final-screen").style.display = "flex";
-      document.getElementById("philosophy").textContent = philosophyText;
+      document.getElementById("number").textContent = "1,000,000";
+      setTimeout(() => {
+        document.getElementById("final-screen").style.display = "flex";
+        document.getElementById("philosophy").textContent = philosophyText;
+      }, 800);
     }
 
-    document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleTap(); }, { passive: false });
-    document.addEventListener("mousedown", handleTap);
+    document.addEventListener("touchstart", (e) => { 
+      if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); 
+      handleTap(); 
+    }, { passive: false });
+    document.addEventListener("mousedown", (e) => {
+      if(e.target.tagName !== 'A') handleTap();
+    });
   </script>
 </body>
 </html>
