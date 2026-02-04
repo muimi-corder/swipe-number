@@ -1,26 +1,44 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Void Pulse - Privacy</title>
-<style>
-  body { margin:0; padding:20px; background:#000; color:#fff; font-family:system-ui, -apple-system, sans-serif; line-height:1.6; }
-  h1 { color:#00f5af; margin-bottom:10px; }
-  p { margin-bottom:12px; font-size:16px; }
-  a { color:#00f5af; text-decoration:underline; }
-  nav { margin-bottom:20px; }
-  nav a { margin-right:15px; font-weight:bold; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy - Void Pulse</title>
+  <style>
+    body {
+      margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif;
+      background-color: #000; color: #fff;
+      display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center;
+    }
+    .container {
+      max-width: 600px; padding: 20px;
+      border: 2px solid #00f5af; border-radius: 12px; background: rgba(0,0,0,0.8);
+    }
+    h1 { margin-bottom: 20px; font-size: 24px; color: #00f5af; }
+    p { font-size: 16px; line-height: 1.6; color: #ccc; }
+  </style>
 </head>
 <body>
-  <h1>Void Pulse - Privacy</h1>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-  </nav>
-  <p>Void Pulseでは、ユーザーの個人情報を取得しません。ブラウザのローカルストレージに保存されるのは、数字の値とタップ回数のみです。</p>
-  <p>このデータは端末内にのみ保存され、外部に送信されることはありません。ログイン、アカウント作成、広告トラッキングは一切ありません。</p>
-  <p>外部リンク（TikTok等）がありますが、リンク先のプライバシーは当サイトでは管理していません。</p>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p id="privacy-text"></p>
+  </div>
+
+  <script>
+    const userLang = navigator.language.toLowerCase();
+    let lang = 'en';
+    if (userLang.startsWith('ja')) lang = 'ja';
+    else if (userLang.startsWith('zh')) lang = 'zh';
+    else if (userLang.startsWith('ko')) lang = 'ko';
+
+    const i18n = {
+      ja: "途中でやめましょう。それが正解です。",
+      en: "Stop halfway. That's the right choice.",
+      zh: "中途停止。那是正确的选择。",
+      ko: "중간에 그만두세요. 그것이 정답입니다."
+    };
+
+    document.getElementById("privacy-text").textContent = i18n[lang];
+  </script>
 </body>
 </html>
