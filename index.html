@@ -10,7 +10,6 @@
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
-      /* 最初にご提示いただいたグラデーション背景 */
       background: radial-gradient(circle at center, #111 0%, #000 70%);
       color: #fff; font-family: system-ui, sans-serif;
       overflow: hidden; touch-action: none;
@@ -22,41 +21,51 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
-    /* 数字：中央配置・巨大化 */
+    /* メインの数字：基本状態 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 64px; font-weight: 900; letter-spacing: 2px;
-      transition: transform 0.08s ease, color 0.08s ease;
+      font-size: 80px; font-weight: 900; letter-spacing: 2px;
+      transition: transform 0.05s cubic-bezier(0.1, 0.9, 0.2, 1), color 0.1s;
+      color: #888; /* 通常時は少し暗めにして「当たり」を際立たせる */
     }
 
-    /* 視覚エフェクト：通常（水色） */
-    .pulse { transform: scale(1.08); color: #00ffcc; }
-
-    /* 視覚エフェクト：大当たり（ゴールド＋輝き） */
-    .flash { color: #ffd700 !important; text-shadow: 0 0 12px #ffd700; transform: scale(1.2) !important; }
-
-    /* ストリーク切れ：暗転 */
-    .cold { color: #333 !important; }
-
-    #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; }
-
-    /* 広告枠のデザイン維持 */
-    .ad {
-      width: 100%; min-height: 60px; background: #111;
-      display: flex; justify-content: center; align-items: center;
+    /* 視覚刺激：通常ヒット（白く光って少し拡大） */
+    .pulse {
+      transform: scale(1.1);
+      color: #fff !important;
+      text-shadow: 0 0 15px rgba(255,255,255,0.5);
     }
 
-    /* 報酬ポップアップ */
+    /* 視覚刺激：大当たり（マゼンタに巨大化＋強発光） */
+    .flash {
+      color: #ff00ff !important;
+      text-shadow: 0 0 30px #ff00ff, 0 0 60px #ff00ff;
+      transform: scale(1.6) !important;
+    }
+    
+    /* ストリーク切れ（1.2秒放置でグレーアウト） */
+    .cold {
+      color: #222 !important;
+      transform: scale(0.85);
+      text-shadow: none !important;
+    }
+
+    #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; letter-spacing: 2px; }
+
+    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
+
+    /* 報酬ポップアップのアニメーション強化 */
     .reward {
-      position: absolute; font-size: 14px; font-weight: bold;
-      pointer-events: none; z-index: 100;
-      animation: pop 0.8s ease forwards;
+      position: absolute; font-size: 32px; font-weight: 900;
+      color: #ff00ff; pointer-events: none; z-index: 100;
+      text-shadow: 0 0 10px #000;
+      animation: pop 0.5s cubic-bezier(0.15, 0.85, 0.35, 1.2) forwards;
     }
 
     @keyframes pop {
-      0% { opacity: 0; transform: translateY(10px) scale(0.8); }
-      30% { opacity: 1; transform: translateY(0) scale(1.1); }
-      100% { opacity: 0; transform: translateY(-20px) scale(1); }
+      0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+      50% { opacity: 1; transform: translate(-50%, -60px) scale(1.5); }
+      100% { opacity: 0; transform: translate(-50%, -100px) scale(1); }
     }
   </style>
 </head>
@@ -68,7 +77,7 @@
     </div>
 
     <div id="number">0</div>
-    <div id="hint">swipe.</div>
+    <div id="hint">NON-STOP SWIPE</div>
 
     <div class="ad">
       <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
@@ -80,69 +89,76 @@
     let lastTime = Date.now();
     const numberEl = document.getElementById("number");
 
-    // 初期表示
     numberEl.textContent = value.toLocaleString();
 
-    function handleAction(e) {
-      if (e.cancelable) e.preventDefault();
-      
+    // 1. 即反応：指を離した瞬間に判定
+    let isDown = false;
+    document.addEventListener("pointerdown", () => { isDown = true; });
+    document.addEventListener("pointerup", (e) => {
+      if (!isDown) return;
+      increment(e);
+      isDown = false;
+    });
+
+    function increment(e) {
       const now = Date.now();
       const delta = now - lastTime;
-      
-      // 1. ストリーク圧（1.2秒以上あくと「cold」で数字が暗くなる）
+
+      // クラスを一度リセットしてアニメーションを再トリガー可能にする
+      numberEl.classList.remove("pulse", "flash", "cold");
+      void numberEl.offsetWidth; // リフロー強制
+
+      // 2. ストリーク圧：1.2秒あくと「冷める」
       const isFast = delta < 1200;
 
-      // 2. 可変報酬（8%で+10、それ以外は+1）
+      // 3. 可変報酬：8%で+10、それ以外は+1
       const isJackpot = Math.random() < 0.08;
       const bonus = isJackpot ? 10 : 1;
       value += bonus;
 
-      // 反映
       numberEl.textContent = value.toLocaleString();
-      numberEl.classList.remove("pulse", "flash", "cold");
-
-      // 3. 視覚＋振動フィードバック
+      
+      // 4. 視覚＋振動の最大化
       if (isJackpot) {
-        // 大当たり：ゴールドに発光
         numberEl.classList.add("flash");
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        triggerReward(t.clientX, t.clientY, "+10!!");
-        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+        // 大当たりのときはタップ位置にポップアップ
+        triggerReward(e.clientX, e.clientY);
+        // 特殊振動（ト・ト・トーン！）
+        if (navigator.vibrate) navigator.vibrate([40, 30, 40, 30, 80]);
       } else {
-        // 通常：水色
         if (isFast) {
           numberEl.classList.add("pulse");
+          if (navigator.vibrate) navigator.vibrate(15);
         } else {
           numberEl.classList.add("cold");
         }
-        if (navigator.vibrate) navigator.vibrate(15);
       }
-
-      // 4. 即反応のためのクリーンアップ
-      setTimeout(() => {
-        numberEl.classList.remove("pulse", "flash");
-      }, 80);
 
       lastTime = now;
       localStorage.setItem("value", value);
     }
 
-    // スワイプもタップも、指を離した瞬間に確実にカウント
-    document.addEventListener("touchend", handleAction, { passive: false });
-    document.addEventListener("mouseup", handleAction);
-
-    function triggerReward(x, y, msg) {
+    function triggerReward(x, y) {
       const div = document.createElement("div");
       div.className = "reward";
-      div.textContent = msg;
-      div.style.left = (x || window.innerWidth / 2) + "px";
-      div.style.top = (y || window.innerHeight / 2) + "px";
-      div.style.color = "#ffd700";
+      div.textContent = "+10!!";
+      // 画面端での切れ防止
+      const posX = x ? Math.min(Math.max(x, 50), window.innerWidth - 50) : window.innerWidth / 2;
+      const posY = y ? Math.min(Math.max(y, 100), window.innerHeight - 100) : window.innerHeight / 2;
+      
+      div.style.left = posX + "px";
+      div.style.top = posY + "px";
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 800);
+      setTimeout(() => div.remove(), 500);
     }
 
-    // 広告初期化
+    // 放置監視：1.2秒操作がないと自動で「cold」状態にする
+    setInterval(() => {
+      if (Date.now() - lastTime > 1200) {
+        numberEl.classList.add("cold");
+      }
+    }, 500);
+
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
   </script>
