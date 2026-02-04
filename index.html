@@ -6,34 +6,39 @@
   <title>Void Pulse</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; position: relative; }
-    #header-links { width: 100%; padding: 15px 0; text-align: center; font-size: 10px; z-index: 100; opacity: 0.3; }
-    #header-links a { color: #fff; text-decoration: none; margin: 0 15px; pointer-events: auto; }
+    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
 
-    #display-area { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; }
+    /* メイン表示エリア */
+    #display-area { text-align: center; width: 100%; }
     #target-text { font-size: 14px; color: #ff3b30; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.8; }
     #number { font-size: 80px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-    #message { font-size: 14px; color: #444; font-weight: 900; height: 24px; margin-top: 15px; text-transform: uppercase; }
+    #message { font-size: 13px; color: #444; font-weight: 900; height: 24px; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
     
-    #progress-bar { position: fixed; top: 0; left: 0; height: 4px; background: #ff3b30; width: 0%; z-index: 1000; }
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: #ff3b30; width: 0%; z-index: 1000; }
     
-    #final-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-    #philosophy { font-size: 16px; line-height: 2; color: #ccc; margin-bottom: 40px; max-width: 500px; font-weight: 300; }
+    /* 最終画面（ヘッダーを含む） */
+    #final-screen { 
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: space-between; 
+      padding: 60px 20px; text-align: center; box-sizing: border-box;
+    }
+    #philosophy { font-size: 15px; line-height: 2.2; color: #888; max-width: 500px; font-weight: 300; letter-spacing: 0.05em; margin-top: auto; margin-bottom: 40px; }
     
-    .donate-btn { padding: 18px 36px; background: #fff; color: #000; font-weight: 900; text-decoration: none; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; }
+    .donate-btn { padding: 18px 36px; background: #fff; color: #000; font-weight: 900; text-decoration: none; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; margin-bottom: auto; }
+    .donate-btn:hover { background: #ff3b30; color: #fff; }
 
-    .tap-anim { animation: tap-pulse 0.05s ease-out; }
+    /* 終了後のみ表示されるヘッダーリンク */
+    #header-links { font-size: 10px; opacity: 0.3; padding-bottom: 20px; }
+    #header-links a { color: #fff; text-decoration: none; margin: 0 15px; }
+
+    .tap-anim { animation: tap-pulse 0.04s ease-out; }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
   <div id="progress-bar"></div>
+  
   <div id="container">
-    <header id="header-links">
-      <a href="about.html">About</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://www.tiktok.com/">TikTok</a>
-    </header>
     <div id="display-area">
       <div id="target-text">TARGET: 1,000,000</div>
       <div id="number">0</div>
@@ -43,54 +48,56 @@
 
   <div id="final-screen">
     <div id="philosophy"></div>
-    <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-btn">投げ銭で虚無を支援する</a>
+    <a href="https://www.buymeacoffee.com/YOUR_ID" target="_blank" class="donate-btn">活動を支援する</a>
+    
+    <footer id="header-links">
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://www.tiktok.com/">TikTok</a>
+    </footer>
   </div>
 
   <script>
-    // 永久ロック確認
-    if (localStorage.getItem("void_eternal_lock")) {
+    if (localStorage.getItem("void_lock_vfinal")) {
       window.onload = () => finish(true);
     }
 
     let startTime = null;
     let isFinished = false;
-    const DURATION = 60000; // 1分
-    const TARGET = 1000000;
-    const MAX_VAL = 974382; // 到達点（97万数千）
+    const DURATION = 60000; 
+    const MAX_VAL = 978412; 
 
-    const insults = ["加速しろ。", "遅すぎる。", "指が震えてるぞ。", "時間の無駄だ。", "無価値な努力。", "まだやるのか？", "虚無が見えるか？"];
+    const insults = [
+      "進んでいる気がするだけだ",
+      "数字は動く。意味は動かない",
+      "電気信号の、静かな葬列",
+      "熱はどこにも届かない",
+      "ただ、時間が磨り減っている",
+      "0と1の間に、価値は存在しない",
+      "この振動に、出口はない"
+    ];
 
     function update() {
       if (isFinished || !startTime) return;
-      
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / DURATION, 1);
       
-      // プログレスバー
       document.getElementById("progress-bar").style.width = (progress * 100) + "%";
-
-      // 時間経過に基づいて数値を算出（タップ数は関係なく、時間比例でMAX_VALへ）
-      // 指数関数的に増やすことで、最後に「届きそう」感を出す
-      const currentValue = Math.floor(MAX_VAL * Math.pow(progress, 0.7));
+      const currentValue = Math.floor(MAX_VAL * Math.pow(progress, 0.75));
       document.getElementById("number").textContent = currentValue.toLocaleString();
 
-      if (progress >= 1) {
-        finish();
-      }
+      if (progress >= 1) finish();
     }
 
     function handleTap() {
       if (isFinished) return;
       if (!startTime) {
         startTime = Date.now();
-        setInterval(update, 50); // 高速更新で滑らかに
+        setInterval(update, 50);
       }
-
-      // メッセージの更新（タップ時のみ）
-      if (Math.random() < 0.2) {
+      if (Math.random() < 0.25) {
         document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
       }
-
       const numEl = document.getElementById("number");
       numEl.classList.remove("tap-anim");
       void numEl.offsetWidth;
@@ -99,16 +106,22 @@
 
     function finish(alreadyLocked = false) {
       isFinished = true;
-      if (!alreadyLocked) {
-        localStorage.setItem("void_eternal_lock", "true");
-      }
+      if (!alreadyLocked) localStorage.setItem("void_lock_vfinal", "true");
       
       document.getElementById("final-screen").style.display = "flex";
-      document.getElementById("philosophy").textContent = "「1分間、君はこの数字を必死に追いかけた。だが結果は見ての通りだ。1,000,000には届かない。そして君の1分間も、二度と戻らない。この場所はもう、君に開かれることはない。」";
+      document.getElementById("philosophy").innerHTML = 
+        "追いかけた数字は幻で、費やした1分間だけが確かな事実。<br><br>" +
+        "熱を失った画面と、二度と開かない扉。<br><br>" +
+        "虚無へようこそ。";
     }
 
-    document.addEventListener("touchstart", (e) => { if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); handleTap(); }, { passive: false });
-    document.addEventListener("mousedown", (e) => { if(e.target.tagName !== 'A') handleTap(); });
+    document.addEventListener("touchstart", (e) => { 
+      if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); 
+      handleTap(); 
+    }, { passive: false });
+    document.addEventListener("mousedown", (e) => { 
+      if(e.target.tagName !== 'A') handleTap(); 
+    });
   </script>
 </body>
 </html>
