@@ -2,203 +2,198 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Mindless Swipe</title>
-
-<!-- AdSense（自分のIDに差し替え） -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Swipe</title>
 
 <style>
-  :root {
-    --bg:#000;
-    --fg:#fff;
-    --gold:#ffd700;
-    --mint:#00ffcc;
-    --red:#ff3b3b;
-  }
   html,body{
-    margin:0;height:100%;background:radial-gradient(circle at center,#111 0%,#000 70%);
-    color:var(--fg);font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    overflow:hidden;touch-action:none;
+    margin:0;
+    padding:0;
+    height:100%;
+    background:#000;
+    color:#eaeaea;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow:hidden;
   }
-  #app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
-  .ad{width:100%;min-height:60px;background:#0c0c0c;display:flex;align-items:center;justify-content:center}
-  #hud{width:100%;display:flex;justify-content:space-between;opacity:.6;font-size:12px;padding:8px 12px;box-sizing:border-box}
-  #center{flex:1;display:flex;align-items:center;justify-content:center;position:relative;width:100%}
-  #num{
-    font-size:72px;font-weight:900;letter-spacing:1px;user-select:none;
-    transition:transform .08s ease, color .08s ease, filter .08s ease;
+
+  #app{
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
   }
-  .pulse{transform:scale(1.08);color:var(--mint)}
-  .flash{color:var(--gold);filter:drop-shadow(0 0 12px var(--gold))}
-  .danger{color:var(--red)}
-  #hint{position:absolute;bottom:16px;opacity:.25;font-size:12px}
-  .reward{
-    position:absolute;font-size:14px;font-weight:700;opacity:0;
-    animation:pop .9s ease forwards;pointer-events:none;
+
+  #count{
+    font-size:64px;
+    letter-spacing:1px;
+    user-select:none;
   }
-  @keyframes pop{
-    0%{opacity:0;transform:translateY(10px) scale(.8)}
-    30%{opacity:1;transform:translateY(0) scale(1.15)}
-    100%{opacity:0;transform:translateY(-24px) scale(1)}
+
+  #hint{
+    position:fixed;
+    top:16px;
+    font-size:12px;
+    color:#555;
+    user-select:none;
   }
-  #decay{
-    position:absolute;top:0;left:0;height:4px;width:100%;
-    background:linear-gradient(90deg,var(--red),transparent);
-    opacity:.0;transition:opacity .2s ease;
+
+  #message{
+    position:fixed;
+    top:40%;
+    width:100%;
+    text-align:center;
+    font-size:16px;
+    color:#777;
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+    user-select:none;
   }
-  /* TikTok録画向け：中央だけ映える */
-  @media (min-width:480px){
-    #num{font-size:96px}
+
+  footer{
+    position:fixed;
+    bottom:60px;
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:#666;
+  }
+  footer a{
+    color:#666;
+    margin:0 8px;
+    text-decoration:none;
+  }
+
+  #ad{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    height:60px;
+    background:#111;
+    color:#555;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:12px;
+    opacity:.4;
   }
 </style>
 </head>
+
 <body>
 <div id="app">
-  <!-- 上広告 -->
-  <div class="ad">
-    <ins class="adsbygoogle" style="display:block;width:100%;height:60px"
-      data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
-  </div>
-
-  <div id="hud">
-    <div id="day">DAY 1</div>
-    <div id="swipes">0 swipes</div>
-  </div>
-
-  <div id="center">
-    <div id="decay"></div>
-    <div id="num">0</div>
-    <div id="hint">swipe.</div>
-  </div>
-
-  <!-- 下広告 -->
-  <div class="ad">
-    <ins class="adsbygoogle" style="display:block;width:100%;height:60px"
-      data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
-  </div>
+  <div id="hint">Swipe or Tap</div>
+  <div id="count">0</div>
 </div>
 
+<div id="message"></div>
+
+<!-- AdSense required navigation -->
+<footer>
+  <a href="about.html">About</a>
+  <a href="privacy.html">Privacy Policy</a>
+  <!-- ↓ 自分のGitHubプロフィールURLに置き換える -->
+  <a href="https://github.com/あなたのユーザー名">Contact</a>
+</footer>
+
+<!-- Ad placeholder (enable after approval) -->
+<div id="ad">Ad Space</div>
+
 <script>
-/* =======================
-   中毒コア
-======================= */
-let value = +localStorage.getItem("v") || 0;
-let swipes = +localStorage.getItem("s") || 0;
-let streak = +localStorage.getItem("k") || 0;
-let last = +localStorage.getItem("t") || 0;
-let day = +localStorage.getItem("d") || 1;
+let count = 0;
+const countEl = document.getElementById("count");
+const msgEl = document.getElementById("message");
+let msgTimer = null;
+let lastAction = Date.now();
 
-const num = document.getElementById("num");
-const sw = document.getElementById("swipes");
-const dy = document.getElementById("day");
-const decayBar = document.getElementById("decay");
+/* exact messages */
+const exactMessages = {
+  1:"You started.",
+  2:"That happened.",
+  3:"Still here.",
+  4:"Nothing changed.",
+  5:"You kept going.",
+  6:"This is a thing now.",
+  7:"You did that.",
+  8:"Again.",
+  9:"Still nothing.",
+  10:"Okay.",
+  42:"That number meant something. Not here.",
+  69:"Nice. Still pointless.",
+  100:"You expected something, didn't you?",
+  333:"No reward is coming.",
+  777:"Lucky number. Same result.",
+  1000:"You spent time on this.",
+  10000:"Time converted to digits.",
+  100000:"This kept you here.",
+  1000000:"It kept going. So did you."
+};
 
-num.textContent = fmt(value);
-sw.textContent = swipes + " swipes";
-dy.textContent = "DAY " + day;
+/* generic pools */
+const generic = {
+  small:["This counts as progress.","No meaning added.","You noticed this."],
+  mid:["Nothing unlocked.","Still no purpose.","You stayed."],
+  large:["This feels familiar.","You are persistent.","It still works."],
+  huge:["Still no ending.","This is just a number.","You kept the pattern."]
+};
 
-let sx=0, sy=0;
-document.addEventListener("touchstart",e=>{
-  const t=e.touches[0]; sx=t.clientX; sy=t.clientY;
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* frequency control */
+function shouldShow(n){
+  if(n<=10) return true;
+  if(n<100) return n%10===0;
+  if(n<1000) return n%50===0;
+  if(n<10000) return n%100===0;
+  if(n<100000) return n%1000===0;
+  if(n<1000000) return n%10000===0;
+  return n===1000000;
+}
+
+function textFor(n){
+  if(exactMessages[n]) return exactMessages[n];
+  if(n<100) return pick(generic.small);
+  if(n<1000) return pick(generic.mid);
+  if(n<10000) return pick(generic.mid);
+  if(n<100000) return pick(generic.large);
+  if(n<1000000) return pick(generic.huge);
+  return "";
+}
+
+function showMessage(n){
+  if(!shouldShow(n)) return;
+  const t = textFor(n);
+  if(!t) return;
+  msgEl.textContent = t;
+  msgEl.style.opacity = 1;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(()=>msgEl.style.opacity=0,1000);
+}
+
+/* increment */
+function increment(){
+  count++;
+  countEl.textContent = count;
+  showMessage(count);
+  lastAction = Date.now();
+}
+
+/* tap & swipe */
+let sx=null, sy=null;
+document.addEventListener("pointerdown",e=>{ sx=e.clientX; sy=e.clientY; });
+document.addEventListener("pointerup",e=>{
+  if(sx===null) return;
+  const dx=Math.abs(e.clientX-sx), dy=Math.abs(e.clientY-sy);
+  increment();
+  sx=sy=null;
 });
-document.addEventListener("touchend",e=>{
-  const t=e.changedTouches[0];
-  if(Math.abs(t.clientX-sx)>18 || Math.abs(t.clientY-sy)>18) inc();
-});
 
-/* 可変報酬：指数＋ノイズ */
-function inc(){
-  const now=Date.now();
-  streak = (now-last<1200)? streak+1 : 1;
-  last=now;
-
-  swipes++;
-  const fib = [1,1,2,3,5,8,13];
-  let base = fib[Math.min(6, Math.floor(Math.log2(streak+1)))];
-  let bonus = Math.random()<0.08 ? 10 : 0;
-  let delta = base + bonus;
-
-  value += delta;
-
-  num.textContent = fmt(value);
-  sw.textContent = swipes + " swipes";
-  pulse(bonus||streak%25===0);
-
-  checkpoints(value);
-  save();
-}
-
-function pulse(big){
-  num.classList.add("pulse");
-  setTimeout(()=>num.classList.remove("pulse"),80);
-  if(big){
-    num.classList.add("flash");
-    reward(big>1?"+10!!":"KEEP GOING");
-    vibrate(30);
-    setTimeout(()=>num.classList.remove("flash"),160);
-  }
-}
-
-/* 節目で強制演出（撮られる） */
-function checkpoints(v){
-  if(v===777 || v===999 || v===1000){
-    reward("🔥 "+v);
-    num.classList.add("flash");
-    vibrate(60);
-    setTimeout(()=>num.classList.remove("flash"),240);
-  }
-}
-
-/* 10秒放置で自壊（焦らせる） */
-let decayTimer=setInterval(decay,1000);
-function decay(){
-  const idle=Date.now()-last;
-  if(idle>10000 && value>0){
-    decayBar.style.opacity=1;
-    value=Math.max(0, value-1);
-    num.textContent=fmt(value);
-    num.classList.add("danger");
-    setTimeout(()=>num.classList.remove("danger"),120);
-    save();
-  }else{
-    decayBar.style.opacity=0;
-  }
-}
-
-/* 演出 */
-function reward(text){
-  const r=document.createElement("div");
-  r.className="reward";
-  r.textContent=text;
-  r.style.left=(20+Math.random()*60)+"%";
-  r.style.top="50%";
-  document.getElementById("center").appendChild(r);
-  setTimeout(()=>r.remove(),900);
-}
-function vibrate(ms){ if(navigator.vibrate) navigator.vibrate(ms); }
-function fmt(n){ return n.toLocaleString(); }
-
-/* 日跨ぎ */
-(function(){
-  const lastDay=+localStorage.getItem("daystamp")||0;
-  const today=new Date().toDateString();
-  if(lastDay!==today){
-    day++; localStorage.setItem("daystamp",today);
-  }
-})();
-
-function save(){
-  localStorage.setItem("v",value);
-  localStorage.setItem("s",swipes);
-  localStorage.setItem("k",streak);
-  localStorage.setItem("t",last);
-  localStorage.setItem("d",day);
-}
-
-/* 広告初期化 */
-(adsbygoogle=window.adsbygoogle||[]).push({});
-(adsbygoogle=window.adsbygoogle||[]).push({});
+/* ad visibility on idle */
+setInterval(()=>{
+  const ad=document.getElementById("ad");
+  ad.style.opacity = (Date.now()-lastAction>1500)?1:.4;
+},300);
 </script>
 </body>
 </html>
