@@ -12,10 +12,8 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
     
-    /* 広告用スペース（上部バナー想定） */
     .ad-slot-top { width: 100%; height: 50px; background: rgba(255,255,255,0.01); display: flex; align-items: center; justify-content: center; font-size: 8px; color: #222; z-index: 100; }
 
-    /* ランキングボード */
     #ranking-board {
       position: absolute; top: 60px; left: 15px; min-width: 200px;
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
@@ -31,7 +29,6 @@
     @keyframes top-glow { 0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.05); } 50% { box-shadow: 0 0 12px rgba(255,255,255,0.15); } }
     .rank-self { color: #00f5af !important; font-weight: bold; }
 
-    /* メイン数字エリア */
     #display-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1; text-align: center; }
     #number { font-size: 90px; font-weight: 900; transition: color 0.1s; }
     #final-waste { font-size: 14px; color: #ff0000; font-weight: 900; margin-top: 15px; opacity: 0; letter-spacing: 1px; }
@@ -39,18 +36,15 @@
     .tap-anim { animation: tap-pulse 0.1s ease-out; }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-    /* DEADスクショ用グリッチ */
     .glitch-active { animation: glitch-dead 0.1s infinite !important; text-shadow: 2.5px 0 #fff, -2.5px 0 #ff0000; }
     @keyframes glitch-dead { 0% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 100% { transform: translate(1px, -1px); } }
     .dead-stable { color: #b8860b !important; opacity: 0.8; animation: none !important; }
     .dead-stable-text { color: #b8860b !important; opacity: 0.6; animation: none !important; }
 
-    /* 煽りメッセージ */
     #message-container { position: absolute; bottom: 62%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; z-index: 10; }
     #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.3s; }
     .show-msg { opacity: 1 !important; }
 
-    /* スマート自慢モード */
     #evidence-overlay {
       position: absolute; bottom: 120px; width: auto; 
       background: rgba(0, 245, 175, 0.05); padding: 6px 18px; border-radius: 20px;
@@ -61,7 +55,6 @@
     .show-evidence { opacity: 1 !important; transform: translateY(0) !important; }
     .evidence-text { font-size: 12px; color: #00f5af; font-weight: 900; text-transform: uppercase; }
 
-    /* 下部広告枠（アンカー広告想定） */
     .ad-slot-bottom { width: 100%; height: 60px; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; border-top: 1px solid #111; z-index: 100; font-size: 9px; color: #222; }
     footer { padding-bottom: 10px; width: 100%; text-align: center; font-size: 10px; z-index: 20; opacity: 0.3; }
   </style>
@@ -69,28 +62,22 @@
 <body>
   <div id="container">
     <div class="ad-slot-top">AD SPACE (TOP)</div>
-    
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
-    
     <div id="ranking-board">
         <div id="rank-title" style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;"></div>
         <div id="ranks"></div>
         <div style="font-size:7px; margin-top:5px; color:#111; text-align:center;">SPONSORED LINKS</div>
     </div>
-
     <div id="message-container"><div id="message"></div></div>
-    
     <div id="display-area">
       <div id="number">0</div>
       <div id="final-waste"></div>
     </div>
-
     <div class="ad-slot-bottom">AD SPACE (ANCHOR)</div>
     <footer id="footer-links"></footer>
   </div>
 
   <script>
-    // 言語設定と多言語辞書
     const userLang = navigator.language.toLowerCase();
     let lang = 'en';
     if (userLang.startsWith('ja')) lang = 'ja';
@@ -98,10 +85,26 @@
     else if (userLang.startsWith('ko')) lang = 'ko';
 
     const i18n = {
-      ja: { dead: "働け", wasted: "合計損失時間", wasted_short: "無駄にした時間", rank_title: "時間の無駄遣いランキング", insults: ["無駄。", "価値ゼロ。", "何故？", "まだいるの？"], you: "あなた" },
-      en: { dead: "GO TO WORK", wasted: "TOTAL WASTED", wasted_short: "WASTED", rank_title: "TOP 10 TIME WASTERS", insults: ["WASTE.", "ZERO VALUE.", "WHY?", "STILL HERE?"], you: "YOU" },
-      zh: { dead: "去工作吧", wasted: "总共浪费的时间", wasted_short: "浪费时间", rank_title: "浪费时间排行榜 TOP 10", insults: ["无用。", "毫无价值。", "为什么？", "还在看？"], you: "你" },
-      ko: { dead: "일이나 해", wasted: "총 낭비한 시간", wasted_short: "시간 낭비", rank_title: "시간 낭비 랭킹 TOP 10", insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?"], you: "당신" }
+      ja: {
+        dead: "働け", wasted: "合計損失時間", wasted_short: "無駄にした時間", rank_title: "時間の無駄遣いランキング", you: "あなた",
+        insults: ["無駄。", "価値ゼロ。", "何故？", "まだいるの？", "時間の墓場。", "無意味。", "虚無。", "親が泣くぞ。", "指の無駄。", "電気の無駄。", "救いようがない。", "時間のドブ捨て。", "何が楽しい？", "履歴書に書け。", "虚しいね。", "お疲れ様。", "時間の無駄のプロ。", "底辺。", "終わってる。", "もうやめろ。"],
+        ghosts: ["ニートの神", "虚無の王", "指の亡霊", "人生放棄者", "スマホ中毒者", "時間の守護者", "孤独なランナー", "画面の奴隷", "無職の星", "タップマシン"]
+      },
+      en: {
+        dead: "GO TO WORK", wasted: "TOTAL WASTED", wasted_short: "WASTED", rank_title: "TOP 10 TIME WASTERS", you: "YOU",
+        insults: ["WASTE.", "ZERO VALUE.", "WHY?", "STILL HERE?", "TIME GRAVE.", "POINTLESS.", "EMPTY.", "CRYING PARENTS.", "WASTE OF FINGERS.", "WASTE OF POWER.", "HOPELESS.", "TRASHING TIME.", "FUN?", "PUT ON RESUME.", "SO HOLLOW.", "GOOD JOB.", "WASTE PRO.", "BOTTOM TIER.", "IT'S OVER.", "STOP NOW."],
+        ghosts: ["NEET_LORD", "VOID_KING", "GHOST_TAPPER", "LIFE_LEAVER", "PHONE_ADDICT", "TIME_KEEPER", "LONELY_RUNNER", "SCREEN_SLAVE", "JOBLESS_STAR", "TAP_MACHINE"]
+      },
+      zh: {
+        dead: "去工作吧", wasted: "总共浪费的时间", wasted_short: "浪费时间", rank_title: "浪费时间排行榜 TOP 10", you: "你",
+        insults: ["无用。", "毫无价值。", "为什么？", "还在看？", "时间坟墓。", "没意义。", "虚空。", "父母在哭。", "手指累吗？", "浪费电。", "没救了。", "时间垃圾。", "好玩吗？", "写在简历上。", "真空虚。", "辛苦了。", "浪费专家。", "底层。", "完了。", "快停下。"],
+        ghosts: ["宅男之神", "虚空之王", "指尖幽灵", "人生弃子", "手机奴隶", "时间守护者", "孤独行者", "屏幕之囚", "失业之星", "点击机器"]
+      },
+      ko: {
+        dead: "일이나 해", wasted: "총 낭비한 시간", wasted_short: "시간 낭비", rank_title: "시간 낭비 랭킹 TOP 10", you: "당신",
+        insults: ["무의미함.", "가치 없음.", "왜?", "아직도 여기야?", "시간의 무덤.", "의미 없어.", "허무함.", "부모님이 운다.", "손가락 아깝다.", "전기 아까워.", "답이 없다.", "시간 낭비의 끝.", "이게 재밌어?", "이력서에 써라.", "허전하네.", "수고했어.", "낭비 전문가.", "밑바닥.", "끝났다.", "이제 그만해."],
+        ghosts: ["니트의 신", "허무의 왕", "손가락 망령", "인생 포기자", "폰 중독자", "시간 수호자", "고독한 러너", "화면의 노예", "백수의 별", "클릭 머신"]
+      }
     };
     const t = i18n[lang];
 
@@ -118,34 +121,22 @@
     document.getElementById("rank-title").textContent = t.rank_title;
     document.getElementById("footer-links").innerHTML = `About / Privacy / TikTok`;
 
-    const ghostUsers = [
-      { name: "TOUCH_GRASS", score: 999999 }, { name: "NO_SOCIAL_LIFE", score: 850200 },
-      { name: "MR_VOID", score: 620110 }, { name: "GET_A_JOB", score: 220500 },
-      { name: "WHY_THO", score: 115000 }, { name: "BOT_OR_SAD", score: 52000 },
-      { name: "WASTED_TIME", score: 18000 }, { name: "KEEP_DREAMING", score: 5000 },
-      { name: "NEW_LOSER", score: 1200 }
-    ];
+    const ghostScores = [999999, 850200, 620110, 220500, 115000, 52000, 18000, 5000, 1200];
+    const ghostUsers = ghostScores.map((s, i) => ({ name: t.ghosts[i], score: s }));
 
-    function initAudio() {
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 
     function triggerPulse(freq, vol, colorClass) {
       if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
       gain.gain.setValueAtTime(vol, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-
       numberEl.classList.remove("tap-anim");
-      void numberEl.offsetWidth; 
-      numberEl.classList.add("tap-anim");
-      
+      void numberEl.offsetWidth; numberEl.classList.add("tap-anim");
       if (colorClass && !isDead) {
         numberEl.style.color = colorClass === 'green' ? '#00f5af' : '#ff3b30';
         setTimeout(() => { if (!isDead) numberEl.style.color = '#fff'; }, 100);
@@ -154,29 +145,20 @@
 
     function updateDisplay(isTapping = false) {
       const v = Math.floor(value);
-      if (v >= 1000000 && !isDead) {
-        isDead = true;
-        triggerDeadEvent();
-      } else if (!isDead) {
-        numberEl.textContent = v.toLocaleString();
-        numberEl.style.fontSize = "90px";
-        if (isTapping) checkMessages(v);
-      }
+      if (v >= 1000000 && !isDead) { isDead = true; triggerDeadEvent(); }
+      else if (!isDead) { numberEl.textContent = v.toLocaleString(); numberEl.style.fontSize = "90px"; if (isTapping) checkMessages(v); }
       updateRanking(v);
     }
 
     function triggerDeadEvent() {
       numberEl.textContent = t.dead;
-      numberEl.style.fontSize = lang === 'ja' || lang === 'zh' || lang === 'ko' ? "80px" : "45px";
+      numberEl.style.fontSize = lang === 'en' ? "45px" : "80px";
       finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
       finalWasteEl.style.opacity = "1";
-      numberEl.classList.add("glitch-active");
-      finalWasteEl.classList.add("glitch-active");
+      numberEl.classList.add("glitch-active"); finalWasteEl.classList.add("glitch-active");
       setTimeout(() => {
-        numberEl.classList.remove("glitch-active");
-        finalWasteEl.classList.remove("glitch-active");
-        numberEl.classList.add("dead-stable");
-        finalWasteEl.classList.add("dead-stable-text");
+        numberEl.classList.remove("glitch-active"); finalWasteEl.classList.remove("glitch-active");
+        numberEl.classList.add("dead-stable"); finalWasteEl.classList.add("dead-stable-text");
       }, 3000);
     }
 
@@ -186,7 +168,7 @@
         const isSelf = u.name === t.you;
         let scoreVal = u.score.toLocaleString();
         if (isSelf && current >= 1000000) scoreVal = "DEAD";
-        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}"><span>${i + 1}. ${u.name}</span><span>${scoreVal}</span></div>`;
+        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}"><span class="rank-name">${i + 1}. ${u.name}</span><span>${scoreVal}</span></div>`;
       }).join('');
     }
 
@@ -204,13 +186,9 @@
       if (!audioCtx) initAudio();
       if (e.target.tagName === 'A' || isDead) return;
       const isJackpot = Math.random() < 0.08;
-      value += isJackpot ? 10 : 1;
-      totalTaps++;
-      lastTime = Date.now();
-      triggerPulse(isJackpot ? 660 : 330, 0.1, 'green');
-      updateDisplay(true);
-      localStorage.setItem("value", value);
-      localStorage.setItem("totalTaps", totalTaps);
+      value += isJackpot ? 10 : 1; totalTaps++; lastTime = Date.now();
+      triggerPulse(isJackpot ? 660 : 330, 0.1, 'green'); updateDisplay(true);
+      localStorage.setItem("value", value); localStorage.setItem("totalTaps", totalTaps);
     }
 
     setInterval(() => {
@@ -218,26 +196,16 @@
       if (idleTime > 3000) {
         document.getElementById("waste-time").textContent = `${t.wasted_short}: ${Math.floor(totalTaps / 60)} MINS`;
         if (!isDead) document.getElementById("evidence-overlay").classList.add("show-evidence");
-      } else {
-        document.getElementById("evidence-overlay").classList.remove("show-evidence");
-      }
-      if (idleTime > 10000 && value > 0 && !isDead) {
-        value -= 1;
-        triggerPulse(110, 0.05, 'red');
-        updateDisplay(false);
-      }
+      } else { document.getElementById("evidence-overlay").classList.remove("show-evidence"); }
+      if (idleTime > 10000 && value > 0 && !isDead) { value -= 1; triggerPulse(110, 0.05, 'red'); updateDisplay(false); }
     }, 1200);
 
     document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
     document.addEventListener("mousedown", handleStart);
-    
     if (isDead) {
-        numberEl.textContent = t.dead;
-        numberEl.style.fontSize = lang === 'ja' || lang === 'zh' || lang === 'ko' ? "80px" : "45px";
-        numberEl.classList.add("dead-stable");
-        finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
-        finalWasteEl.style.opacity = "1";
-        finalWasteEl.classList.add("dead-stable-text");
+      numberEl.textContent = t.dead; numberEl.style.fontSize = lang === 'en' ? "45px" : "80px";
+      numberEl.classList.add("dead-stable"); finalWasteEl.textContent = `${t.wasted}: ${Math.floor(totalTaps / 60)} MINS`;
+      finalWasteEl.style.opacity = "1"; finalWasteEl.classList.add("dead-stable-text");
     }
     updateDisplay();
   </script>
