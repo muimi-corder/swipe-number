@@ -5,74 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Swipe Number</title>
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-
   <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; width: 100%;
-      background: radial-gradient(circle at center, #111 0%, #000 70%);
-      color: #fff; font-family: system-ui, sans-serif;
-      overflow: hidden; touch-action: none;
-      -webkit-user-select: none; user-select: none;
-    }
-
-    #container {
-      height: 100%; width: 100%; display: flex;
-      flex-direction: column; justify-content: space-between; align-items: center;
-    }
-
-    /* メイン数字 */
-    #number {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      transition: transform 0.05s ease;
-    }
-
-    /* 信号機の青緑と赤 */
+    /* （スタイル部分は変更なし：信号機の青緑、赤、チカチカ演出、メッセージ表示を維持） */
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: radial-gradient(circle at center, #111 0%, #000 70%); color: #fff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+    #number { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 80px; font-weight: 900; letter-spacing: 2px; transition: transform 0.05s ease; }
     .active { color: #fff; }
     .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
     .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; }
     .penalty { color: #ff3b30 !important; transform: scale(0.95); }
-
     @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    /* メッセージ */
-    #message {
-      position: absolute; top: 20%; width: 100%; text-align: center;
-      font-size: 18px; color: #555; font-weight: 900; pointer-events: none;
-      text-transform: uppercase; opacity: 0; transition: opacity 0.2s;
-    }
+    #message { position: absolute; top: 20%; width: 100%; text-align: center; font-size: 18px; color: #555; font-weight: 900; pointer-events: none; text-transform: uppercase; opacity: 0; transition: opacity 0.2s; }
     .show-msg { opacity: 1 !important; }
-
-    /* ランキング表示（右上に小さく） */
-    #ranking-board {
-      position: absolute; top: 80px; right: 15px; width: 110px;
-      background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px;
-      font-size: 10px; font-family: monospace; color: #888; pointer-events: none;
-    }
+    #ranking-board { position: absolute; top: 80px; right: 15px; width: 150px; background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; font-size: 10px; font-family: monospace; color: #666; pointer-events: none; }
     .rank-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 5px; }
     .rank-self { color: #00f5af; font-weight: bold; }
-
     footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 12px; z-index: 10; }
     footer a { color: #444; margin: 0 10px; text-decoration: none; }
     .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
-
-    .reward {
-      position: absolute; font-size: 24px; font-weight: 900; color: #ffff00;
-      pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards;
-    }
+    .reward { position: absolute; font-size: 24px; font-weight: 900; color: #ffff00; pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards; }
     @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0); } 100% { opacity: 1; transform: translate(-50%, -60px); } }
   </style>
 </head>
 
 <body>
   <div id="container">
-    <div class="ad">
-      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
-    </div>
+    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
 
     <div id="ranking-board">
-      <div style="border-bottom: 1px solid #333; margin-bottom: 5px; padding-bottom: 2px;">TOP 10 GHOSTS</div>
+      <div style="border-bottom: 1px solid #333; margin-bottom: 5px; padding-bottom: 2px; font-size: 9px;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
 
@@ -85,9 +47,7 @@
       <a href="https://github.com/">Contact</a>
     </footer>
 
-    <div class="ad">
-      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
-    </div>
+    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
   </div>
 
   <script>
@@ -98,8 +58,19 @@
     const messageEl = document.getElementById("message");
     const ranksEl = document.getElementById("ranks");
 
-    // ダミーの世界記録（100万を目指すユーザーを煽る用）
-    const ghosts = [982041, 750200, 520110, 310005, 120500, 85000, 42000, 15000, 5000, 1200];
+    // 皮肉なゴーストユーザーの名前とスコア
+    const ghostUsers = [
+      { name: "TOUCH_GRASS", score: 999999 }, // 「外の芝生でも触ってこい（引きこもり野郎）」
+      { name: "NO_SOCIAL_LIFE", score: 850200 }, // 「社会生活ゼロ」
+      { name: "MR_VOID", score: 620110 },        // 「虚無さん」
+      { name: "STILL_HERE?", score: 410005 },    // 「まだいんの？」
+      { name: "GET_A_JOB", score: 220500 },      // 「働け」
+      { name: "WHY_THO", score: 115000 },        // 「なんでやってんの？」
+      { name: "BOT_OR_SAD", score: 52000 },      // 「ロボットか、悲しい奴か」
+      { name: "WASTED_TIME", score: 18000 },     // 「無駄にした時間」
+      { name: "KEEP_DREAMING", score: 5000 },    // 「夢でも見てろ」
+      { name: "NEW_LOSER", score: 1200 }         // 「新入りの負け犬」
+    ];
 
     function updateDisplay() {
       if (value < 0) value = 0;
@@ -110,19 +81,20 @@
     }
 
     function updateRanking(current) {
-      // 現在の値をゴーストたちに混ぜてソート
-      let combined = [...ghosts, current].sort((a, b) => b - a);
+      // 自分のデータを作成
+      let combined = [...ghostUsers, { name: "YOU", score: current }].sort((a, b) => b.score - a.score);
       let top10 = combined.slice(0, 10);
       
-      ranksEl.innerHTML = top10.map((v, i) => {
-        const isSelf = v === current;
+      ranksEl.innerHTML = top10.map((user, i) => {
+        const isSelf = user.name === "YOU";
         return `<div class="rank-item ${isSelf ? 'rank-self' : ''}">
-          <span>${i + 1}.</span>
-          <span>${v.toLocaleString()}</span>
+          <span class="rank-name">${i + 1}. ${user.name}</span>
+          <span>${user.score.toLocaleString()}</span>
         </div>`;
       }).join('');
     }
 
+    // handleAction, checkMessages, triggerReward, setInterval は以前のロジックを維持
     function handleAction(e) {
       if (e.target.tagName === 'A') return;
       if (e.cancelable) e.preventDefault();
@@ -130,10 +102,8 @@
       const isJackpot = Math.random() < 0.08;
       value += isJackpot ? 10 : 1;
       updateDisplay();
-
       numberEl.className = "";
       void numberEl.offsetWidth; 
-
       if (isJackpot) {
         numberEl.classList.add("flash");
         const t = e.changedTouches ? e.changedTouches[0] : e;
@@ -143,7 +113,6 @@
         numberEl.classList.add("tap-green");
         if (navigator.vibrate) navigator.vibrate(10);
       }
-
       setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
       lastTime = now;
       save();
@@ -156,7 +125,6 @@
       else if (v >= 10000) msg = "STOP IT.";
       else if (v >= 1000) msg = "STILL NOTHING.";
       else if (v >= 100) msg = "JUST A NUMBER.";
-
       if (msg !== "" && v !== lastMsgValue && msg !== messageEl.textContent) {
         messageEl.textContent = msg;
         messageEl.classList.add("show-msg");
@@ -166,11 +134,9 @@
     }
 
     function save() { localStorage.setItem("value", value); }
-
     function triggerReward(x, y) {
       const div = document.createElement("div");
-      div.className = "reward";
-      div.textContent = "+10!!";
+      div.className = "reward"; div.textContent = "+10!!";
       div.style.left = (x || window.innerWidth / 2) + "px";
       div.style.top = (y || window.innerHeight / 2) + "px";
       document.body.appendChild(div);
