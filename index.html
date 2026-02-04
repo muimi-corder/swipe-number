@@ -3,98 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Swipe Number - Void</title>
-
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-
+  <title>Void Pulse</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
-      background: radial-gradient(circle at center, #111 0%, #000 70%);
-      color: #fff; font-family: system-ui, -apple-system, sans-serif;
-      overflow: hidden; touch-action: none;
-      -webkit-user-select: none; user-select: none;
+      background: #000; color: #fff; font-family: system-ui, sans-serif;
+      overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none;
     }
-
-    #container {
-      height: 100%; width: 100%; display: flex;
-      flex-direction: column; justify-content: space-between; align-items: center;
-    }
-
+    #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
+    
+    /* ランキング */
     #ranking-board {
-      position: absolute; top: 80px; left: 15px; width: 155px;
-      background: rgba(255, 255, 255, 0.03); padding: 8px; border-radius: 6px;
-      font-size: 10px; font-family: 'Courier New', monospace; color: #555; 
-      pointer-events: none; border-left: 2px solid #222;
-      z-index: 5;
+      position: absolute; top: 60px; left: 15px; width: 150px;
+      background: rgba(255, 255, 255, 0.02); padding: 8px; border-radius: 6px;
+      font-size: 10px; font-family: monospace; color: #444; pointer-events: none;
     }
-    .rank-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
-    .rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 4px; }
     .rank-self { color: #00f5af; font-weight: bold; }
 
-    #message-container {
-      position: absolute; bottom: 62%; width: 100%; height: 40px;
-      display: flex; align-items: center; justify-content: center;
-      z-index: 10;
-    }
-    #message {
-      font-size: 16px; color: #777; font-weight: 900;
-      text-transform: uppercase; letter-spacing: 2px;
-      text-align: center; padding: 0 20px;
-      opacity: 0; transition: opacity 0.1s;
-    }
+    /* 中央メッセージ */
+    #message-container { position: absolute; bottom: 60%; width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; }
+    #message { font-size: 16px; color: #555; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.1s; }
     .show-msg { opacity: 1 !important; }
 
-    #number {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 85px; font-weight: 900; letter-spacing: 2px;
-      transition: transform 0.05s ease;
-      z-index: 1;
-    }
-
+    /* 数字 */
+    #number { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; z-index: 1; transition: transform 0.05s ease; }
+    
+    /* カラー同期 */
     .active { color: #fff; }
-    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
-    .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; }
-    .penalty { color: #ff3b30 !important; transform: scale(0.95); }
+    .tap-green { color: #00f5af !important; transform: scale(1.1) !important; }
+    .flash { color: #ffff00 !important; transform: scale(1.2) !important; }
+    .penalty { color: #ff3b30 !important; transform: scale(0.9) !important; }
 
-    @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    /* ノイズのオンオフ表示 */
-    #noise-status {
-      position: absolute; top: 85px; right: 15px; font-size: 8px; color: #333;
-      text-transform: uppercase; letter-spacing: 1px;
-    }
-
-    footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 12px; z-index: 10; }
-    footer a { color: #444; margin: 0 10px; text-decoration: none; opacity: 0.6; }
-    .ad { width: 100%; min-height: 60px; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 20; }
-    .reward { position: absolute; font-size: 24px; font-weight: 900; color: #ffff00; pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards; }
-    @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0); } 100% { opacity: 1; transform: translate(-50%, -60px); } }
+    footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 10px; color: #222; }
   </style>
 </head>
-
 <body>
   <div id="container">
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
-
     <div id="ranking-board">
-      <div style="border-bottom: 1px solid #222; margin-bottom: 4px; padding-bottom: 2px; font-size: 8px; color:#444;">TOP 10 TIME WASTERS</div>
+      <div style="border-bottom: 1px solid #222; margin-bottom: 4px; color:#333;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
-
-    <div id="noise-status">Noise: On (Click to Init)</div>
-
     <div id="message-container"><div id="message"></div></div>
-    
     <div id="number">0</div>
-
-    <footer>
-      <a href="#">About</a>
-      <a href="#">Privacy</a>
-      <a href="#">Terms</a>
-    </footer>
-
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
+    <footer id="status">TAP TO START PULSE</footer>
   </div>
 
   <script>
@@ -105,53 +56,57 @@
     const messageEl = document.getElementById("message");
     const ranksEl = document.getElementById("ranks");
 
-    // ブラウンノイズ生成用変数
+    // Audio Context
     let audioCtx = null;
-    let noiseNode = null;
+    let brownNoise = null;
 
     const ghostUsers = [
-      { name: "TOUCH_GRASS", score: 999999 },
-      { name: "NO_SOCIAL_LIFE", score: 850200 },
-      { name: "MR_VOID", score: 620110 },
-      { name: "STILL_HERE?", score: 410005 },
-      { name: "GET_A_JOB", score: 220500 },
-      { name: "WHY_THO", score: 115000 },
-      { name: "BOT_OR_SAD", score: 52000 },
-      { name: "WASTED_TIME", score: 18000 },
-      { name: "KEEP_DREAMING", score: 5000 },
+      { name: "TOUCH_GRASS", score: 999999 }, { name: "NO_SOCIAL_LIFE", score: 850200 },
+      { name: "MR_VOID", score: 620110 }, { name: "GET_A_JOB", score: 220500 },
+      { name: "WHY_THO", score: 115000 }, { name: "BOT_OR_SAD", score: 52000 },
+      { name: "WASTED_TIME", score: 18000 }, { name: "KEEP_DREAMING", score: 5000 },
       { name: "NEW_LOSER", score: 1200 }
     ];
 
-    const randomInsults = [
-      "NOT TIRED?", "KEEP GOING, LOSER.", "FOR WHAT?", "ZERO VALUE.", 
-      "BRAIN ROT.", "TICK TOCK.", "STILL ADDICTED?", "LOOK AT YOU.",
-      "GOVERNED BY A NUMBER.", "IS THIS FUN?", "MEANINGLESS.", "POOR SOUL.",
-      "FINGER EXERCISE?", "DELETE THIS.", "WHY?", "SAD.", "DO SOMETHING ELSE.",
-      "U STILL TAPPING?", "ERROR: NO LIFE.", "OBSESSED."
-    ];
+    const randomInsults = ["BRAIN ROT.", "ZERO VALUE.", "OBSESSED.", "KEEP GOING.", "POOR SOUL.", "WHY?"];
 
-    // ブラウンノイズ生成ロジック
-    function initNoise() {
+    function initAudio() {
       if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Brown Noise Generation
       const bufferSize = 4096;
       let lastOut = 0.0;
-      noiseNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-      noiseNode.onaudioprocess = (e) => {
+      brownNoise = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      brownNoise.onaudioprocess = (e) => {
         const output = e.outputBuffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
           const white = Math.random() * 2 - 1;
           output[i] = (lastOut + (0.02 * white)) / 1.02;
           lastOut = output[i];
-          output[i] *= 3.5; // 音量調整
+          output[i] *= 0.15; // 背景音なので控えめ
         }
       };
-      noiseNode.connect(audioCtx.destination);
-      document.getElementById('noise-status').textContent = "Noise: Active";
+      brownNoise.connect(audioCtx.destination);
+      document.getElementById('status').textContent = "PULSE ACTIVE";
+    }
+
+    // Pulse音（電子的な短いパルス）
+    function playPulse(freq, duration, vol) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
     }
 
     function updateDisplay() {
-      if (value < 0) value = 0;
       const floorVal = Math.floor(value);
       numberEl.textContent = floorVal.toLocaleString();
       checkMessages(floorVal);
@@ -160,39 +115,41 @@
 
     function updateRanking(current) {
       let combined = [...ghostUsers, { name: "YOU", score: current }].sort((a, b) => b.score - a.score);
-      let top10 = combined.slice(0, 10);
-      ranksEl.innerHTML = top10.map((user, i) => {
-        const isSelf = user.name === "YOU";
-        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}">
-          <span class="rank-name">${i + 1}. ${user.name}</span>
-          <span>${user.score.toLocaleString()}</span>
-        </div>`;
-      }).join('');
+      ranksEl.innerHTML = combined.slice(0, 10).map((u, i) => 
+        `<div class="rank-item ${u.name === 'YOU' ? 'rank-self' : ''}"><span>${i + 1}. ${u.name}</span><span>${u.score.toLocaleString()}</span></div>`
+      ).join('');
+    }
+
+    function handleAction(e) {
+      if (!audioCtx) initAudio();
+      if (e.target.tagName === 'A') return;
+      if (e.cancelable) e.preventDefault();
+      
+      const now = Date.now();
+      const isJackpot = Math.random() < 0.08;
+      value += isJackpot ? 10 : 1;
+      
+      // 同期演出
+      numberEl.className = isJackpot ? "flash" : "tap-green";
+      playPulse(isJackpot ? 880 : 440, 0.1, 0.2); // ジャックポットは高音
+      if (navigator.vibrate) navigator.vibrate(isJackpot ? [30, 20, 30] : 10);
+      
+      updateDisplay();
+      setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
+      lastTime = now;
+      save();
     }
 
     function checkMessages(v) {
       const currentCheckpoint = Math.floor(v / 50);
-      const passedGhost = ghostUsers.find(g => v === g.score + 1 || (v > g.score && v <= g.score + 5 && v % 5 === 0));
+      const passedGhost = ghostUsers.find(g => v === g.score + 1);
+      
       if (passedGhost) {
-        let roast = "";
-        switch(passedGhost.name) {
-          case "TOUCH_GRASS": roast = "YOU BEAT 'TOUCH GRASS'. NOW GO DO IT."; break;
-          case "NO_SOCIAL_LIFE": roast = "CONGRATS, YOU HAVE LESS LIFE THAN HIM."; break;
-          case "GET_A_JOB": roast = "YOU BEAT THE UNEMPLOYED. WOW."; break;
-          default: roast = `BYE BYE, ${passedGhost.name}.`; break;
-        }
         messageEl.style.color = "#ffff00";
-        showMessage(roast, 1500);
-        return;
-      }
-      messageEl.style.color = "#777";
-      let milestoneMsg = "";
-      if (v >= 1000000) milestoneMsg = "YOU WON NOTHING.";
-      else if (v >= 100000) milestoneMsg = "ARE YOU INSANE?";
-      else if (v >= 10000) milestoneMsg = "STOP IT.";
-      else if (v >= 100) milestoneMsg = "JUST A NUMBER.";
-      if (milestoneMsg !== "" && v % 1000 === 0) { showMessage(milestoneMsg, 2000); } 
-      else if (currentCheckpoint > lastCheckpoint) {
+        showMessage(`BYE BYE, ${passedGhost.name}.`, 1500);
+        playPulse(1200, 0.5, 0.1); // 追い抜き音
+      } else if (currentCheckpoint > lastCheckpoint) {
+        messageEl.style.color = "#555";
         showMessage(randomInsults[Math.floor(Math.random() * randomInsults.length)], 800);
         lastCheckpoint = currentCheckpoint;
       }
@@ -201,52 +158,19 @@
     function showMessage(txt, duration) {
       messageEl.textContent = txt;
       messageEl.classList.add("show-msg");
-      setTimeout(() => {
-        messageEl.classList.remove("show-msg");
-        setTimeout(() => { messageEl.style.color = "#777"; }, 200);
-      }, duration);
-    }
-
-    function handleAction(e) {
-      // 最初のタップでノイズを開始（ブラウザの仕様対策）
-      if (!audioCtx) initNoise();
-      if (e.target.tagName === 'A') return;
-      if (e.cancelable) e.preventDefault();
-      const now = Date.now();
-      const isJackpot = Math.random() < 0.08;
-      value += isJackpot ? 10 : 1;
-      updateDisplay();
-      numberEl.className = "";
-      void numberEl.offsetWidth; 
-      if (isJackpot) {
-        numberEl.classList.add("flash");
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        triggerReward(t.clientX, t.clientY);
-        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-      } else {
-        numberEl.classList.add("tap-green");
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-      setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
-      lastTime = now;
-      save();
+      setTimeout(() => messageEl.classList.remove("show-msg"), duration);
     }
 
     function save() { localStorage.setItem("value", value); }
-    function triggerReward(x, y) {
-      const div = document.createElement("div");
-      div.className = "reward"; div.textContent = "+10!!";
-      div.style.left = (x || window.innerWidth / 2) + "px";
-      div.style.top = (y || window.innerHeight / 2) + "px";
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), 400);
-    }
 
+    // ペナルティ（減少）も音と同期
     setInterval(() => {
-      const now = Date.now();
-      if (now - lastTime > 1200) {
+      if (Date.now() - lastTime > 1200 && value > 0) {
+        value -= 1;
         numberEl.className = "penalty";
-        if (value > 0) { value -= 1; updateDisplay(); save(); }
+        playPulse(110, 0.2, 0.1); // 低い警告音
+        updateDisplay();
+        save();
       }
     }, 1200);
 
