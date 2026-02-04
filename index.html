@@ -10,11 +10,10 @@
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; width: 100%;
-      background: radial-gradient(circle at center, #222 0%, #000 80%);
+      /* 最初にご提示いただいたグラデーション背景 */
+      background: radial-gradient(circle at center, #111 0%, #000 70%);
       color: #fff; font-family: system-ui, sans-serif;
-      overflow: hidden; 
-      /* ブラウザの挙動を完全に無効化 */
-      touch-action: none; 
+      overflow: hidden; touch-action: none;
       -webkit-user-select: none; user-select: none;
     }
 
@@ -23,107 +22,127 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
+    /* 数字：中央配置・巨大化 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 80px; font-weight: 900;
-      transition: transform 0.05s, color 0.1s;
-      pointer-events: none; /* 数字自体がタッチを邪魔しないようにする */
+      font-size: 64px; font-weight: 900; letter-spacing: 2px;
+      transition: transform 0.08s ease, color 0.08s ease;
     }
 
-    /* 視覚エフェクト：通常 */
-    .pulse { transform: scale(1.2); color: #00ffcc; }
-    /* 視覚エフェクト：大当たり */
-    .flash { color: #ff00ff !important; text-shadow: 0 0 30px #ff00ff; transform: scale(1.6) !important; }
-    /* ストリーク切れ */
-    .cold { color: #444 !important; opacity: 0.5; }
+    /* 視覚エフェクト：通常（水色） */
+    .pulse { transform: scale(1.08); color: #00ffcc; }
+
+    /* 視覚エフェクト：大当たり（ゴールド＋輝き） */
+    .flash { color: #ffd700 !important; text-shadow: 0 0 12px #ffd700; transform: scale(1.2) !important; }
+
+    /* ストリーク切れ：暗転 */
+    .cold { color: #333 !important; }
 
     #hint { position: absolute; bottom: 90px; font-size: 12px; opacity: 0.3; }
-    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
 
+    /* 広告枠のデザイン維持 */
+    .ad {
+      width: 100%; min-height: 60px; background: #111;
+      display: flex; justify-content: center; align-items: center;
+    }
+
+    /* 報酬ポップアップ */
     .reward {
-      position: absolute; font-size: 24px; font-weight: bold; color: #ff00ff;
-      pointer-events: none; z-index: 100; animation: pop 0.6s ease-out forwards;
+      position: absolute; font-size: 14px; font-weight: bold;
+      pointer-events: none; z-index: 100;
+      animation: pop 0.8s ease forwards;
     }
 
     @keyframes pop {
-      0% { opacity: 0; transform: translateY(0) scale(0.5); }
-      30% { opacity: 1; transform: translateY(-40px) scale(1.3); }
-      100% { opacity: 0; transform: translateY(-80px) scale(1); }
+      0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+      30% { opacity: 1; transform: translateY(0) scale(1.1); }
+      100% { opacity: 0; transform: translateY(-20px) scale(1); }
     }
   </style>
 </head>
 
 <body>
   <div id="container">
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins></div>
+    <div class="ad">
+      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
+    </div>
+
     <div id="number">0</div>
-    <div id="hint">SWIPE FAST</div>
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins></div>
+    <div id="hint">swipe.</div>
+
+    <div class="ad">
+      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="2222222222"></ins>
+    </div>
   </div>
 
   <script>
     let value = Number(localStorage.getItem("value") || 0);
     let lastTime = Date.now();
     const numberEl = document.getElementById("number");
+
+    // 初期表示
     numberEl.textContent = value.toLocaleString();
 
-    // 反応を「最優先」にする設定
     function handleAction(e) {
-      e.preventDefault(); // ブラウザの標準挙動を殺す
+      if (e.cancelable) e.preventDefault();
       
       const now = Date.now();
       const delta = now - lastTime;
       
-      // ストリーク圧判定
+      // 1. ストリーク圧（1.2秒以上あくと「cold」で数字が暗くなる）
       const isFast = delta < 1200;
-      
-      // 可変報酬ロジック
+
+      // 2. 可変報酬（8%で+10、それ以外は+1）
       const isJackpot = Math.random() < 0.08;
       const bonus = isJackpot ? 10 : 1;
       value += bonus;
 
+      // 反映
       numberEl.textContent = value.toLocaleString();
       numberEl.classList.remove("pulse", "flash", "cold");
 
-      // 演出の分岐
+      // 3. 視覚＋振動フィードバック
       if (isJackpot) {
+        // 大当たり：ゴールドに発光
         numberEl.classList.add("flash");
-        // 指の位置か画面中央でポップアップ
-        const touch = e.changedTouches ? e.changedTouches[0] : e;
-        triggerReward(touch.clientX, touch.clientY);
-        if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+        const t = e.changedTouches ? e.changedTouches[0] : e;
+        triggerReward(t.clientX, t.clientY, "+10!!");
+        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
       } else {
+        // 通常：水色
         if (isFast) {
           numberEl.classList.add("pulse");
         } else {
           numberEl.classList.add("cold");
         }
-        if (navigator.vibrate) navigator.vibrate(10);
+        if (navigator.vibrate) navigator.vibrate(15);
       }
 
+      // 4. 即反応のためのクリーンアップ
       setTimeout(() => {
         numberEl.classList.remove("pulse", "flash");
-      }, 70);
+      }, 80);
 
       lastTime = now;
       localStorage.setItem("value", value);
     }
 
-    // タッチ開始ではなく「終了時（指を離した時）」に必ず発火させる
-    // これにより、どんなに短いスワイプでも必ず1アクションとしてカウント
+    // スワイプもタップも、指を離した瞬間に確実にカウント
     document.addEventListener("touchend", handleAction, { passive: false });
-    document.addEventListener("mouseup", handleAction); // PCマウス用
+    document.addEventListener("mouseup", handleAction);
 
-    function triggerReward(x, y) {
+    function triggerReward(x, y, msg) {
       const div = document.createElement("div");
       div.className = "reward";
-      div.textContent = "+10!!";
+      div.textContent = msg;
       div.style.left = (x || window.innerWidth / 2) + "px";
       div.style.top = (y || window.innerHeight / 2) + "px";
+      div.style.color = "#ffd700";
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 600);
+      setTimeout(() => div.remove(), 800);
     }
 
+    // 広告初期化
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
     try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
   </script>
