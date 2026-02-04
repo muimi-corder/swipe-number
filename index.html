@@ -12,9 +12,10 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; }
     
-    /* ランキング */
+    /* ランキング：名前が全部出るように調整 */
     #ranking-board {
-      position: absolute; top: 60px; left: 15px; width: 185px;
+      position: absolute; top: 60px; left: 15px; 
+      min-width: 200px; 
       background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 6px;
       font-size: 10px; font-family: 'Courier New', monospace; color: #333; pointer-events: none;
       border-left: 2px solid #111; z-index: 5;
@@ -23,7 +24,7 @@
     .rank-item:first-child { background: rgba(255, 255, 255, 0.05); color: #fff; font-size: 11px; border: 1px solid rgba(255, 255, 255, 0.1); animation: top-glow 3s infinite; }
     .rank-item:first-child .rank-name::before { content: "👑 "; }
     @keyframes top-glow { 0%, 100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.05); } 50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.15); } }
-    .rank-name { max-width: 105px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-name { white-space: nowrap; padding-right: 15px; }
     .rank-self { color: #00f5af !important; font-weight: bold; }
 
     /* 数字 */
@@ -40,7 +41,7 @@
     #message { font-size: 16px; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0; transition: opacity 0.1s; }
     .show-msg { opacity: 1 !important; }
 
-    /* 自慢モード（プレイ時間確認用）：UIを邪魔しない配置 */
+    /* スマート自慢モード（放置3秒で出現） */
     #evidence-overlay {
       position: absolute; bottom: 120px; width: auto; 
       background: rgba(0, 245, 175, 0.1); padding: 5px 15px; border-radius: 20px;
@@ -56,18 +57,13 @@
 <body>
   <div id="container">
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
-
     <div id="ranking-board">
       <div style="border-bottom: 1px solid #222; margin-bottom: 6px; padding-bottom: 2px; color:#222; font-size: 9px;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
-    
     <div id="message-container"><div id="message"></div></div>
     <div id="number">0</div>
-
-    <footer>
-      <a href="#">About</a><a href="#">Privacy</a><a href="#">TikTok</a>
-    </footer>
+    <footer><a href="#">About</a><a href="#">Privacy</a><a href="https://www.tiktok.com/">TikTok</a></footer>
   </div>
 
   <script>
@@ -76,7 +72,6 @@
     let lastTime = Date.now();
     let lastCheckpoint = Math.floor(value / 50);
     let audioCtx = null, brownNoise = null;
-    let isPausing = false, pauseTimer = null;
 
     const numberEl = document.getElementById("number");
     const messageEl = document.getElementById("message");
@@ -171,16 +166,8 @@
       if (!audioCtx) initAudio();
       if (e.target.tagName === 'A') return;
       
-      // 自慢モード：0.8秒長押しで「ひっそり」表示
-      isPausing = false;
-      pauseTimer = setTimeout(() => {
-        isPausing = true;
-        const totalMinutes = Math.floor(totalTaps / 60);
-        wasteTimeEl.textContent = `WASTED: ${totalMinutes} MINS`;
-        evidenceOverlay.style.display = "flex";
-        if (navigator.vibrate) navigator.vibrate(30);
-      }, 800);
-
+      evidenceOverlay.style.display = "none"; // タップ中は隠す
+      
       const now = Date.now();
       const isJackpot = Math.random() < 0.08;
       value += isJackpot ? 10 : 1;
@@ -195,33 +182,34 @@
       save();
     }
 
-    function handleEnd() {
-      clearTimeout(pauseTimer);
-      isPausing = false;
-      evidenceOverlay.style.display = "none";
-    }
-
     function save() { 
       localStorage.setItem("value", value); 
       localStorage.setItem("totalTaps", totalTaps);
     }
 
-    // 数字減少ロジック：10秒放置で開始、その後1.2秒周期
+    // 監視ロジック
     setInterval(() => {
       const idleTime = Date.now() - lastTime;
-      if (!isPausing && idleTime > 10000 && value > 0) {
+      
+      // 3秒放置で自慢モード出現
+      if (idleTime > 3000) {
+        const totalMinutes = Math.floor(totalTaps / 60);
+        wasteTimeEl.textContent = `WASTED: ${totalMinutes} MINS`;
+        evidenceOverlay.style.display = "flex";
+      }
+
+      // 10秒放置で減少開始（1.2秒周期）
+      if (idleTime > 10000 && value > 0) {
         value -= 1;
         numberEl.className = "penalty";
         playPulse(110, 0.2, 0.05);
         updateDisplay();
         save();
       }
-    }, 1200); // チェック周期は1.2秒
+    }, 1200);
 
     document.addEventListener("touchstart", (e) => { if(e.cancelable) e.preventDefault(); handleStart(e); }, { passive: false });
-    document.addEventListener("touchend", handleEnd);
     document.addEventListener("mousedown", handleStart);
-    document.addEventListener("mouseup", handleEnd);
     updateDisplay();
   </script>
 </body>
