@@ -19,5 +19,26 @@
   </style>
 </head>
 <body>
-  <div class="container" id="about-container" style="display:none;">
-    <h1>About
+  <div class="container">
+    <h1>About Void Pulse</h1>
+    <p id="about-text"></p>
+  </div>
+
+  <script>
+    const userLang = navigator.language.toLowerCase();
+    let lang = 'en';
+    if(userLang.startsWith('ja')) lang='ja';
+    else if(userLang.startsWith('zh')) lang='zh';
+    else if(userLang.startsWith('ko')) lang='ko';
+
+    const i18n = {
+      ja: "途中でやめましょう。それが正解です。",
+      en: "Stop halfway. That's the right choice.",
+      zh: "中途停止。那是正确的选择。",
+      ko: "중간에 그만두세요. 그것이 정답입니다."
+    };
+
+    document.getElementById("about-text").textContent = i18n[lang];
+  </script>
+</body>
+</html>
