@@ -20,10 +20,10 @@
     }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; }
     
-    /* リンクを上に配置 */
+    /* 上部に移動したリンクエリアのスタイル */
     #header-links { 
       width: 100%; padding: 15px 0; text-align: center; font-size: 10px; 
-      z-index: 100; opacity: 0.5; background: rgba(0,0,0,0.5);
+      z-index: 100; opacity: 0.5; position: relative;
     }
     #header-links a { color: #fff; text-decoration: none; margin: 0 15px; pointer-events: auto; display: inline-block; }
 
@@ -64,11 +64,7 @@
 </head>
 <body>
   <div id="container">
-    <header id="header-links">
-      <a href="#">About</a>
-      <a href="#">Privacy</a>
-      <a href="#">TikTok</a>
-    </header>
+    <header id="header-links"></header>
 
     <div id="evidence-overlay"><div id="waste-time" class="evidence-text"></div></div>
     
@@ -127,6 +123,9 @@
     const finalWasteEl = document.getElementById("final-waste");
     const ranksEl = document.getElementById("ranks");
     document.getElementById("rank-title").textContent = t.rank_title;
+
+    // ヘッダーにリンクを正しく挿入
+    document.getElementById("header-links").innerHTML = `<a href="#">About</a> <a href="#">Privacy</a> <a href="#">TikTok</a>`;
 
     const ghostScores = [999999, 850200, 620110, 220500, 115000, 52000, 18000, 5000, 1200];
     const ghostUsers = ghostScores.map((s, i) => ({ name: t.ghosts[i], score: s }));
