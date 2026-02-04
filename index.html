@@ -21,7 +21,6 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
-    /* ランキングボード：左上 */
     #ranking-board {
       position: absolute; top: 80px; left: 15px; width: 155px;
       background: rgba(255, 255, 255, 0.03); padding: 8px; border-radius: 6px;
@@ -33,7 +32,6 @@
     .rank-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 4px; }
     .rank-self { color: #00f5af; font-weight: bold; }
 
-    /* メッセージコンテナ：中央より少し上 */
     #message-container {
       position: absolute; bottom: 62%; width: 100%; height: 40px;
       display: flex; align-items: center; justify-content: center;
@@ -47,7 +45,6 @@
     }
     .show-msg { opacity: 1 !important; }
 
-    /* メイン数字：中央 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 85px; font-weight: 900; letter-spacing: 2px;
@@ -55,40 +52,37 @@
       z-index: 1;
     }
 
-    /* 状態別カラー */
     .active { color: #fff; }
-    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; } /* 最新LED信号機の青 */
-    .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; } /* +10黄色 */
-    .penalty { color: #ff3b30 !important; transform: scale(0.95); } /* 1.2秒放置の赤 */
+    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
+    .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; }
+    .penalty { color: #ff3b30 !important; transform: scale(0.95); }
 
     @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    /* フッター */
+    /* ノイズのオンオフ表示 */
+    #noise-status {
+      position: absolute; top: 85px; right: 15px; font-size: 8px; color: #333;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
     footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 12px; z-index: 10; }
     footer a { color: #444; margin: 0 10px; text-decoration: none; opacity: 0.6; }
-    
-    /* 広告枠 */
     .ad { width: 100%; min-height: 60px; background: #0a0a0a; display: flex; justify-content: center; align-items: center; z-index: 20; }
-
-    /* +10演出 */
-    .reward {
-      position: absolute; font-size: 24px; font-weight: 900; color: #ffff00;
-      pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards;
-    }
+    .reward { position: absolute; font-size: 24px; font-weight: 900; color: #ffff00; pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards; }
     @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0); } 100% { opacity: 1; transform: translate(-50%, -60px); } }
   </style>
 </head>
 
 <body>
   <div id="container">
-    <div class="ad">
-      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="0000000000"></ins>
-    </div>
+    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
 
     <div id="ranking-board">
       <div style="border-bottom: 1px solid #222; margin-bottom: 4px; padding-bottom: 2px; font-size: 8px; color:#444;">TOP 10 TIME WASTERS</div>
       <div id="ranks"></div>
     </div>
+
+    <div id="noise-status">Noise: On (Click to Init)</div>
 
     <div id="message-container"><div id="message"></div></div>
     
@@ -100,9 +94,7 @@
       <a href="#">Terms</a>
     </footer>
 
-    <div class="ad">
-      <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
-    </div>
+    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
   </div>
 
   <script>
@@ -113,7 +105,10 @@
     const messageEl = document.getElementById("message");
     const ranksEl = document.getElementById("ranks");
 
-    // 皮肉なゴーストランカー
+    // ブラウンノイズ生成用変数
+    let audioCtx = null;
+    let noiseNode = null;
+
     const ghostUsers = [
       { name: "TOUCH_GRASS", score: 999999 },
       { name: "NO_SOCIAL_LIFE", score: 850200 },
@@ -127,7 +122,6 @@
       { name: "NEW_LOSER", score: 1200 }
     ];
 
-    // 50毎の煽りガチャ
     const randomInsults = [
       "NOT TIRED?", "KEEP GOING, LOSER.", "FOR WHAT?", "ZERO VALUE.", 
       "BRAIN ROT.", "TICK TOCK.", "STILL ADDICTED?", "LOOK AT YOU.",
@@ -135,6 +129,26 @@
       "FINGER EXERCISE?", "DELETE THIS.", "WHY?", "SAD.", "DO SOMETHING ELSE.",
       "U STILL TAPPING?", "ERROR: NO LIFE.", "OBSESSED."
     ];
+
+    // ブラウンノイズ生成ロジック
+    function initNoise() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const bufferSize = 4096;
+      let lastOut = 0.0;
+      noiseNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      noiseNode.onaudioprocess = (e) => {
+        const output = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + (0.02 * white)) / 1.02;
+          lastOut = output[i];
+          output[i] *= 3.5; // 音量調整
+        }
+      };
+      noiseNode.connect(audioCtx.destination);
+      document.getElementById('noise-status').textContent = "Noise: Active";
+    }
 
     function updateDisplay() {
       if (value < 0) value = 0;
@@ -158,8 +172,6 @@
 
     function checkMessages(v) {
       const currentCheckpoint = Math.floor(v / 50);
-      
-      // 1. ゴースト追い抜き（最優先・黄色煽り）
       const passedGhost = ghostUsers.find(g => v === g.score + 1 || (v > g.score && v <= g.score + 5 && v % 5 === 0));
       if (passedGhost) {
         let roast = "";
@@ -167,30 +179,21 @@
           case "TOUCH_GRASS": roast = "YOU BEAT 'TOUCH GRASS'. NOW GO DO IT."; break;
           case "NO_SOCIAL_LIFE": roast = "CONGRATS, YOU HAVE LESS LIFE THAN HIM."; break;
           case "GET_A_JOB": roast = "YOU BEAT THE UNEMPLOYED. WOW."; break;
-          case "STILL_HERE?": roast = "YES, YOU ARE STILL HERE. SADLY."; break;
           default: roast = `BYE BYE, ${passedGhost.name}.`; break;
         }
         messageEl.style.color = "#ffff00";
         showMessage(roast, 1500);
         return;
       }
-
-      // 2. 固定マイルストーン
       messageEl.style.color = "#777";
       let milestoneMsg = "";
       if (v >= 1000000) milestoneMsg = "YOU WON NOTHING.";
       else if (v >= 100000) milestoneMsg = "ARE YOU INSANE?";
       else if (v >= 10000) milestoneMsg = "STOP IT.";
-      else if (v >= 1000) milestoneMsg = "STILL NOTHING.";
       else if (v >= 100) milestoneMsg = "JUST A NUMBER.";
-
-      if (milestoneMsg !== "" && v % 1000 === 0) {
-        showMessage(milestoneMsg, 2000);
-      } 
-      // 3. 50毎の煽りガチャ
+      if (milestoneMsg !== "" && v % 1000 === 0) { showMessage(milestoneMsg, 2000); } 
       else if (currentCheckpoint > lastCheckpoint) {
-        const randomMsg = randomInsults[Math.floor(Math.random() * randomInsults.length)];
-        showMessage(randomMsg, 800);
+        showMessage(randomInsults[Math.floor(Math.random() * randomInsults.length)], 800);
         lastCheckpoint = currentCheckpoint;
       }
     }
@@ -205,206 +208,8 @@
     }
 
     function handleAction(e) {
-      if (e.target.tagName === 'A') return;
-      if (e.cancelable) e.preventDefault();
-      
-      const now = Date.now();
-      const isJackpot = Math.random() < 0.08;
-      value += isJackpot ? 10 : 1;
-      updateDisplay();
-
-      numberEl.className = "";
-      void numberEl.offsetWidth; 
-
-      if (isJackpot) {
-        numberEl.classList.add("flash");
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        triggerReward(t.clientX, t.clientY);
-        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-      } else {
-        numberEl.classList.add("tap-green");
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-
-      setTimeout(() => {
-        if (Date.now() - lastTime < 1100) numberEl.className = "active";
-      }, 100);
-
-      lastTime = now;
-      save();
-    }
-
-    function save() { localStorage.setItem("value", value); }
-
-    function triggerReward(x, y) {
-      const div = document.createElement("div");
-      div.className = "reward";
-      div.textContent = "+10!!";
-      div.style.left = (x || window.innerWidth / 2) + "px";
-      div.style.top = (y || window.innerHeight / 2) + "px";
-      document.body.appendChild(div);
-      setTimeout(() => div.remove(), 400);
-    }
-
-    // 1.2秒毎の減少ペナルティ
-    setInterval(() => {
-      const now = Date.now();
-      if (now - lastTime > 1200) {
-        numberEl.className = "penalty";
-        if (value > 0) {
-          value -= 1; 
-          updateDisplay();
-          save();
-        }
-      }
-    }, 1200);
-
-    document.addEventListener("touchend", handleAction, { passive: false });
-    document.addEventListener("mouseup", handleAction);
-    
-    // 初期表示
-    updateDisplay();
-
-    // 広告読み込みエラー対策
-    try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
-    try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
-  </script>
-</body>
-</html>    }
-    #message {
-      font-size: 16px; color: #777; font-weight: 900;
-      text-transform: uppercase; letter-spacing: 2px;
-      opacity: 0; transition: opacity 0.1s; /* 出現をより速く */
-    }
-    .show-msg { opacity: 1 !important; }
-
-    #number {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      font-size: 85px; font-weight: 900; letter-spacing: 2px;
-      transition: transform 0.05s ease;
-    }
-
-    .active { color: #fff; }
-    .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
-    .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; }
-    .penalty { color: #ff3b30 !important; transform: scale(0.95); }
-
-    @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 12px; z-index: 10; }
-    footer a { color: #444; margin: 0 10px; text-decoration: none; }
-    .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
-
-    .reward {
-      position: absolute; font-size: 24px; font-weight: 900; color: #ffff00;
-      pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards;
-    }
-    @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0); } 100% { opacity: 1; transform: translate(-50%, -60px); } }
-  </style>
-</head>
-
-<body>
-  <div id="container">
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
-
-    <div id="ranking-board">
-      <div style="border-bottom: 1px solid #222; margin-bottom: 4px; padding-bottom: 2px; font-size: 8px; color:#444;">TOP 10 TIME WASTERS</div>
-      <div id="ranks"></div>
-    </div>
-
-    <div id="message-container"><div id="message"></div></div>
-    
-    <div id="number">0</div>
-
-    <footer>
-      <a href="about.html">About</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="https://github.com/">Contact</a>
-    </footer>
-
-    <div class="ad"><ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX"></ins></div>
-  </div>
-
-  <script>
-    let value = Number(localStorage.getItem("value") || 0);
-    let lastTime = Date.now();
-    let lastCheckpoint = Math.floor(value / 50);
-    const numberEl = document.getElementById("number");
-    const messageEl = document.getElementById("message");
-    const ranksEl = document.getElementById("ranks");
-
-    const ghostUsers = [
-      { name: "TOUCH_GRASS", score: 999999 },
-      { name: "NO_SOCIAL_LIFE", score: 850200 },
-      { name: "MR_VOID", score: 620110 },
-      { name: "STILL_HERE?", score: 410005 },
-      { name: "GET_A_JOB", score: 220500 },
-      { name: "WHY_THO", score: 115000 },
-      { name: "BOT_OR_SAD", score: 52000 },
-      { name: "WASTED_TIME", score: 18000 },
-      { name: "KEEP_DREAMING", score: 5000 },
-      { name: "NEW_LOSER", score: 1200 }
-    ];
-
-    // 50ごとの煽りガチャリスト
-    const randomInsults = [
-      "NOT TIRED?", "KEEP GOING, LOSER.", "FOR WHAT?", "ZERO VALUE.", 
-      "BRAIN ROT.", "TICK TOCK.", "STILL ADDICTED?", "LOOK AT YOU.",
-      "GOVERNED BY A NUMBER.", "IS THIS FUN?", "MEANINGLESS.", "POOR SOUL.",
-      "FINGER EXERCISE?", "DELETE THIS.", "WHY?", "SAD.", "DO SOMETHING ELSE.",
-      "U STILL TAPPING?", "ERROR: NO LIFE.", "OBSESSED."
-    ];
-
-    function updateDisplay() {
-      if (value < 0) value = 0;
-      const floorVal = Math.floor(value);
-      numberEl.textContent = floorVal.toLocaleString();
-      checkMessages(floorVal);
-      updateRanking(floorVal);
-    }
-
-    function updateRanking(current) {
-      let combined = [...ghostUsers, { name: "YOU", score: current }].sort((a, b) => b.score - a.score);
-      let top10 = combined.slice(0, 10);
-      ranksEl.innerHTML = top10.map((user, i) => {
-        const isSelf = user.name === "YOU";
-        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}">
-          <span class="rank-name">${i + 1}. ${user.name}</span>
-          <span>${user.score.toLocaleString()}</span>
-        </div>`;
-      }).join('');
-    }
-
-    function checkMessages(v) {
-      const currentCheckpoint = Math.floor(v / 50);
-      
-      // 1. マイルストーン（固定メッセージ）
-      let milestoneMsg = "";
-      if (v >= 1000000) milestoneMsg = "YOU WON NOTHING.";
-      else if (v >= 100000) milestoneMsg = "ARE YOU INSANE?";
-      else if (v >= 10000) milestoneMsg = "STOP IT.";
-      else if (v >= 1000) milestoneMsg = "STILL NOTHING.";
-      else if (v >= 100) milestoneMsg = "JUST A NUMBER.";
-
-      // マイルストーン到達時
-      if (milestoneMsg !== "" && v % 1000 === 0 && milestoneMsg !== messageEl.textContent) {
-        showMessage(milestoneMsg, 2000);
-      } 
-      // 2. 50ごとの煽りガチャ
-      else if (currentCheckpoint > lastCheckpoint) {
-        const randomMsg = randomInsults[Math.floor(Math.random() * randomInsults.length)];
-        showMessage(randomMsg, 800); // ガチャは一瞬（0.8秒）
-        lastCheckpoint = currentCheckpoint;
-      }
-    }
-
-    function showMessage(txt, duration) {
-      messageEl.textContent = txt;
-      messageEl.classList.add("show-msg");
-      setTimeout(() => messageEl.classList.remove("show-msg"), duration);
-    }
-
-    function handleAction(e) {
+      // 最初のタップでノイズを開始（ブラウザの仕様対策）
+      if (!audioCtx) initNoise();
       if (e.target.tagName === 'A') return;
       if (e.cancelable) e.preventDefault();
       const now = Date.now();
@@ -451,4 +256,3 @@
   </script>
 </body>
 </html>
-
