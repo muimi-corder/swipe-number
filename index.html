@@ -21,56 +21,47 @@
       flex-direction: column; justify-content: space-between; align-items: center;
     }
 
+    /* メイン数字 */
     #number {
       flex: 1; display: flex; align-items: center; justify-content: center;
       font-size: 80px; font-weight: 900; letter-spacing: 2px;
-      transition: transform 0.05s ease; 
-      transform: scale(1);
+      transition: transform 0.05s ease;
     }
 
-    /* 信号機の青緑(#00f5af) */
-    .active { color: #fff; transform: scale(1); }
+    /* 信号機の青緑と赤 */
+    .active { color: #fff; }
     .tap-green { color: #00f5af !important; transform: scale(1.08) !important; }
-    .flash { 
-      color: #ffff00 !important; 
-      transform: scale(1.15) !important;
-      animation: flicker 0.05s infinite; 
-    }
+    .flash { color: #ffff00 !important; transform: scale(1.15) !important; animation: flicker 0.05s infinite; }
     .penalty { color: #ff3b30 !important; transform: scale(0.95); }
 
-    @keyframes flicker {
-      0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
-    }
+    @keyframes flicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    /* 短く表示されるメッセージ */
+    /* メッセージ */
     #message {
-      position: absolute; top: 25%; width: 100%;
-      text-align: center; font-size: 18px; color: #555;
-      font-weight: 900; pointer-events: none;
-      text-transform: uppercase; letter-spacing: 2px;
-      opacity: 0; transition: opacity 0.2s;
+      position: absolute; top: 20%; width: 100%; text-align: center;
+      font-size: 18px; color: #555; font-weight: 900; pointer-events: none;
+      text-transform: uppercase; opacity: 0; transition: opacity 0.2s;
     }
     .show-msg { opacity: 1 !important; }
 
-    #hint { position: absolute; bottom: 120px; font-size: 12px; opacity: 0.3; pointer-events: none; }
-
-    footer {
-      position: absolute; bottom: 80px; width: 100%;
-      text-align: center; font-size: 12px; z-index: 10;
+    /* ランキング表示（右上に小さく） */
+    #ranking-board {
+      position: absolute; top: 80px; right: 15px; width: 110px;
+      background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px;
+      font-size: 10px; font-family: monospace; color: #888; pointer-events: none;
     }
-    footer a { color: #444; margin: 0 10px; text-decoration: none; }
+    .rank-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .rank-self { color: #00f5af; font-weight: bold; }
 
+    footer { position: absolute; bottom: 80px; width: 100%; text-align: center; font-size: 12px; z-index: 10; }
+    footer a { color: #444; margin: 0 10px; text-decoration: none; }
     .ad { width: 100%; min-height: 60px; background: #111; display: flex; justify-content: center; align-items: center; }
 
     .reward {
       position: absolute; font-size: 24px; font-weight: 900; color: #ffff00;
-      pointer-events: none; z-index: 100;
-      animation: rise 0.4s steps(4) forwards;
+      pointer-events: none; z-index: 100; animation: rise 0.4s steps(4) forwards;
     }
-    @keyframes rise {
-      0% { opacity: 0; transform: translate(-50%, 0); }
-      100% { opacity: 1; transform: translate(-50%, -60px); }
-    }
+    @keyframes rise { 0% { opacity: 0; transform: translate(-50%, 0); } 100% { opacity: 1; transform: translate(-50%, -60px); } }
   </style>
 </head>
 
@@ -80,9 +71,13 @@
       <ins class="adsbygoogle" style="display:block;width:100%;height:60px" data-ad-client="ca-pub-XXXXXXXXXXXX" data-ad-slot="1111111111"></ins>
     </div>
 
+    <div id="ranking-board">
+      <div style="border-bottom: 1px solid #333; margin-bottom: 5px; padding-bottom: 2px;">TOP 10 GHOSTS</div>
+      <div id="ranks"></div>
+    </div>
+
     <div id="message"></div>
     <div id="number">0</div>
-    <div id="hint">keep swiping.</div>
 
     <footer>
       <a href="about.html">About</a>
@@ -101,69 +96,71 @@
     let lastMsgValue = 0;
     const numberEl = document.getElementById("number");
     const messageEl = document.getElementById("message");
+    const ranksEl = document.getElementById("ranks");
 
-    updateDisplay();
-
-    function handleAction(e) {
-      if (e.target.tagName === 'A') return;
-      if (e.cancelable) e.preventDefault();
-      
-      const now = Date.now();
-      const isJackpot = Math.random() < 0.08;
-      const bonus = isJackpot ? 10 : 1;
-      value += bonus;
-
-      updateDisplay();
-
-      numberEl.className = "";
-      void numberEl.offsetWidth; 
-
-      if (isJackpot) {
-        numberEl.classList.add("flash"); 
-        const t = e.changedTouches ? e.changedTouches[0] : e;
-        triggerReward(t.clientX, t.clientY);
-        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-      } else {
-        numberEl.classList.add("tap-green"); 
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-
-      setTimeout(() => {
-        if (Date.now() - lastTime < 1100) {
-          numberEl.className = "active";
-        }
-      }, 100);
-
-      lastTime = now;
-      save();
-    }
+    // ダミーの世界記録（100万を目指すユーザーを煽る用）
+    const ghosts = [982041, 750200, 520110, 310005, 120500, 85000, 42000, 15000, 5000, 1200];
 
     function updateDisplay() {
       if (value < 0) value = 0;
       const floorVal = Math.floor(value);
       numberEl.textContent = floorVal.toLocaleString();
       checkMessages(floorVal);
+      updateRanking(floorVal);
+    }
+
+    function updateRanking(current) {
+      // 現在の値をゴーストたちに混ぜてソート
+      let combined = [...ghosts, current].sort((a, b) => b - a);
+      let top10 = combined.slice(0, 10);
+      
+      ranksEl.innerHTML = top10.map((v, i) => {
+        const isSelf = v === current;
+        return `<div class="rank-item ${isSelf ? 'rank-self' : ''}">
+          <span>${i + 1}.</span>
+          <span>${v.toLocaleString()}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function handleAction(e) {
+      if (e.target.tagName === 'A') return;
+      if (e.cancelable) e.preventDefault();
+      const now = Date.now();
+      const isJackpot = Math.random() < 0.08;
+      value += isJackpot ? 10 : 1;
+      updateDisplay();
+
+      numberEl.className = "";
+      void numberEl.offsetWidth; 
+
+      if (isJackpot) {
+        numberEl.classList.add("flash");
+        const t = e.changedTouches ? e.changedTouches[0] : e;
+        triggerReward(t.clientX, t.clientY);
+        if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+      } else {
+        numberEl.classList.add("tap-green");
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+
+      setTimeout(() => { if (Date.now() - lastTime < 1100) numberEl.className = "active"; }, 100);
+      lastTime = now;
+      save();
     }
 
     function checkMessages(v) {
       let msg = "";
-      // 100万までの絶望的なステップ
       if (v >= 1000000) msg = "YOU WON NOTHING.";
-      else if (v >= 500000) msg = "HALF WAY TO HELL.";
       else if (v >= 100000) msg = "ARE YOU INSANE?";
-      else if (v >= 50000) msg = "GO TO SLEEP.";
       else if (v >= 10000) msg = "STOP IT.";
-      else if (v >= 5000) msg = "GO OUTSIDE.";
-      else if (v >= 2000) msg = "LIFE IS SHORT.";
       else if (v >= 1000) msg = "STILL NOTHING.";
-      else if (v >= 500) msg = "TOTAL WASTE.";
       else if (v >= 100) msg = "JUST A NUMBER.";
 
-      // メッセージが変わった瞬間だけ、短く表示
       if (msg !== "" && v !== lastMsgValue && msg !== messageEl.textContent) {
         messageEl.textContent = msg;
         messageEl.classList.add("show-msg");
-        setTimeout(() => messageEl.classList.remove("show-msg"), 1500); // 1.5秒で消える
+        setTimeout(() => messageEl.classList.remove("show-msg"), 1500);
         lastMsgValue = v;
       }
     }
@@ -183,19 +180,14 @@
     setInterval(() => {
       const now = Date.now();
       if (now - lastTime > 1200) {
-        numberEl.className = "penalty"; 
-        if (value > 0) {
-          value -= 1; 
-          updateDisplay();
-          save();
-        }
+        numberEl.className = "penalty";
+        if (value > 0) { value -= 1; updateDisplay(); save(); }
       }
     }, 1200);
 
     document.addEventListener("touchend", handleAction, { passive: false });
     document.addEventListener("mouseup", handleAction);
-    try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
-    try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e){}
+    updateDisplay();
   </script>
 </body>
 </html>
