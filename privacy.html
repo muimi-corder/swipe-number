@@ -8,37 +8,66 @@
     body {
       margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif;
       background-color: #000; color: #fff;
-      display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center;
+      display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: left;
     }
     .container {
-      max-width: 600px; padding: 20px;
-      border: 2px solid #00f5af; border-radius: 12px; background: rgba(0,0,0,0.8);
+      max-width: 700px; padding: 30px;
+      border: 2px solid #00f5af; border-radius: 12px; background: rgba(0,0,0,0.85);
     }
-    h1 { margin-bottom: 20px; font-size: 24px; color: #00f5af; }
-    p { font-size: 16px; line-height: 1.6; color: #ccc; }
+    h1 { margin-bottom: 20px; font-size: 24px; color: #00f5af; text-align:center; }
+    h2 { margin-top: 20px; font-size: 18px; color: #00f5af; }
+    p { font-size: 14px; line-height: 1.6; color: #ccc; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p id="privacy-text"></p>
+    <div id="privacy-text"></div>
   </div>
 
   <script>
     const userLang = navigator.language.toLowerCase();
-    let lang = 'en';
-    if (userLang.startsWith('ja')) lang = 'ja';
-    else if (userLang.startsWith('zh')) lang = 'zh';
-    else if (userLang.startsWith('ko')) lang = 'ko';
+    let lang='en';
+    if(userLang.startsWith('ja')) lang='ja';
+    else if(userLang.startsWith('zh')) lang='zh';
+    else if(userLang.startsWith('ko')) lang='ko';
 
-    const i18n = {
-      ja: "途中でやめましょう。それが正解です。",
-      en: "Stop halfway. That's the right choice.",
-      zh: "中途停止。那是正确的选择。",
-      ko: "중간에 그만두세요. 그것이 정답입니다."
+    const content = {
+      ja: `
+        <h2>情報収集について</h2>
+        <p>Void Pulseはユーザーの操作履歴（タップ数や達成度）をブラウザのローカルストレージに保存します。個人を特定する情報は収集しません。</p>
+        <h2>データの使用目的</h2>
+        <p>保存されたデータはゲームの進行状態表示やランキング表示のみに使用されます。広告や第三者への提供は行いません。</p>
+        <h2>安全性</h2>
+        <p>保存される情報はローカル環境にのみ存在し、外部に送信されません。ブラウザのデータ削除で全て消去可能です。</p>
+      `,
+      en: `
+        <h2>Information Collection</h2>
+        <p>Void Pulse stores your gameplay progress (tap counts and achievements) in your browser's local storage. No personally identifiable information is collected.</p>
+        <h2>Purpose of Data Use</h2>
+        <p>The stored data is used solely for displaying progress and rankings. No data is shared with third parties or for advertising.</p>
+        <h2>Security</h2>
+        <p>The information remains only on your local device. You can delete it anytime via your browser.</p>
+      `,
+      zh: `
+        <h2>信息收集</h2>
+        <p>Void Pulse 会将您的游戏进度（点击次数和成就）保存在浏览器本地存储中，不会收集任何个人信息。</p>
+        <h2>数据使用目的</h2>
+        <p>这些数据仅用于显示游戏进度和排行榜，不会用于广告或提供给第三方。</p>
+        <h2>安全性</h2>
+        <p>数据仅存在于本地，您可随时通过浏览器删除所有记录。</p>
+      `,
+      ko: `
+        <h2>정보 수집</h2>
+        <p>Void Pulse는 사용자의 게임 진행 상태(탭 수 및 달성도)를 브라우저 로컬 스토리지에 저장합니다. 개인 식별 정보는 수집하지 않습니다.</p>
+        <h2>데이터 사용 목적</h2>
+        <p>저장된 데이터는 진행 상태 표시 및 랭킹 표시 용도로만 사용되며, 광고나 제3자 제공은 하지 않습니다.</p>
+        <h2>보안</h2>
+        <p>정보는 로컬 환경에만 존재하며, 브라우저에서 삭제 시 모든 데이터가 제거됩니다.</p>
+      `
     };
 
-    document.getElementById("privacy-text").textContent = i18n[lang];
+    document.getElementById("privacy-text").innerHTML = content[lang];
   </script>
 </body>
 </html>
