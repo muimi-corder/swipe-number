@@ -33,58 +33,78 @@
   <script>
     const userLang = navigator.language || navigator.userLanguage;
     const isJapanese = userLang.includes('ja');
-
-    const i18n = {
-      ja: {
-        insults: ["進んでいる気がするだけだ", "数字は動く。意味は動かない", "電気信号の、静かな葬列", "熱はどこにも届かない", "ただ、時間が磨り減っている", "0と1の間に、価値は存在しない", "この振動に、出口はない"],
-        final: "あなたが見た数字は、幻だった。<br><br>ここで過ごした時間だけが、<br>そのまま残る。<br><br>この場所は、<br>もう開かない。",
-        ichie: "<br><br><br><span class='ichie'>一会あり<br>誰と儚く、<br>誰とはなく、</span>"
-      },
-      en: {
-        insults: ["Progress is an illusion.", "Numbers move. Meaning stays.", "A silent funeral of bits.", "The heat reaches nowhere.", "Time is merely grinding down.", "No value between 0 and 1.", "No exit from this pulse."],
-        final: "What you saw<br>was never the point.<br><br>Only the time<br>remains.<br><br>This place<br>will not open again.",
-        ichie: "<br><br><br><span class='ichie'>One meeting,<br>brief—<br><br>with someone,<br>or with no one.</span>"
-      }
+    const t = isJapanese ? {
+      insults: ["進んでいる気がするだけだ", "数字は動く。意味は動かない", "電気信号の、静かな葬列", "熱はどこにも届かない", "ただ、時間が磨り減っている", "0と1の間に、価値は存在しない", "この振動に、出口はない"],
+      final: "あなたが見た数字は、幻だった。<br><br>ここで過ごした時間だけが、<br>そのまま残る。<br><br>この場所は、<br>もう開かない。",
+      ichie: "<br><br><br><span class='ichie'>一会あり<br>誰と儚く、<br>誰とはなく、</span>"
+    } : {
+      insults: ["Progress is an illusion.", "Numbers move. Meaning stays.", "A silent funeral of bits.", "The heat reaches nowhere.", "Time is merely grinding down.", "No value between 0 and 1.", "No exit from this pulse."],
+      final: "What you saw<br>was never the point.<br><br>Only the time<br>remains.<br><br>This place<br>will not open again.",
+      ichie: "<br><br><br><span class='ichie'>One meeting,<br>brief—<br><br>with someone,<br>or with no one.</span>"
     };
 
-    const t = isJapanese ? i18n.ja : i18n.en;
-    const LOCK_KEY = "tap_to_million_ultimate";
+    const LOCK_KEY = "tap_to_million_fixed_v1";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null, isFinished = false, tapCount = 0;
     const DURATION = 60000, MAX_VAL = 978412;
 
-    // --- Brown Noise Engine ---
+    // --- 強化版 Brown Noise Engine ---
     let audioCtx, noiseNode, gainNode;
-    function startBrownNoise() {
+
+    async function startBrownNoise() {
+      if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // ブラウザのオーディオ再開処理（重要）
+      if (audioCtx.state === 'suspended') { await audioCtx.resume(); }
+
       const bufferSize = 4096;
       let lastOut = 0.0;
+      
       noiseNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
       gainNode = audioCtx.createGain();
-      
+
       noiseNode.onaudioprocess = (e) => {
         const output = e.outputBuffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
           const white = Math.random() * 2 - 1;
+          // ブラウンノイズのアルゴリズムをより安定したものに
           output[i] = (lastOut + (0.02 * white)) / 1.02;
           lastOut = output[i];
-          output[i] *= 4.0; 
+          output[i] *= 8.0; // 音量を増幅
         }
       };
-      
+
       noiseNode.connect(gainNode);
       gainNode.connect(audioCtx.destination);
+      
+      // フェードイン
       gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1); // 叩いた瞬間にフェードイン
+      gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.2);
     }
 
     function stopBrownNoise() {
       if (gainNode && audioCtx) {
-        // バツンと切らず、極めて短いフェードで「消失」を演出
-        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
-        setTimeout(() => { audioCtx.close(); }, 100);
+        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+        setTimeout(() => { audioCtx.close(); }, 200);
       }
+    }
+
+    function handleTap() {
+      if (isFinished) return;
+      tapCount++;
+      if (!startTime) {
+        startTime = Date.now();
+        startBrownNoise(); // 最初のタップで発動
+        setInterval(update, 30);
+      }
+      update();
+      if (Math.random() < 0.25) { document.getElementById("message").textContent = t.insults[Math.floor(Math.random() * t.insults.length)]; }
+      const numEl = document.getElementById("number");
+      numEl.classList.remove("tap-anim");
+      void numEl.offsetWidth;
+      numEl.classList.add("tap-anim");
     }
 
     function update() {
@@ -97,25 +117,9 @@
       if (progress >= 1) finish();
     }
 
-    function handleTap() {
-      if (isFinished) return;
-      tapCount++;
-      if (!startTime) { 
-        startTime = Date.now(); 
-        startBrownNoise();
-        setInterval(update, 30); 
-      }
-      update();
-      if (Math.random() < 0.25) { document.getElementById("message").textContent = t.insults[Math.floor(Math.random() * t.insults.length)]; }
-      const numEl = document.getElementById("number");
-      numEl.classList.remove("tap-anim");
-      void numEl.offsetWidth;
-      numEl.classList.add("tap-anim");
-    }
-
     function finish(alreadyLocked = false) {
       isFinished = true;
-      stopBrownNoise(); // ここでノイズ停止
+      stopBrownNoise();
       if (!alreadyLocked) localStorage.setItem(LOCK_KEY, "true");
       document.getElementById("final-screen").style.display = "flex";
       const phil = document.getElementById("philosophy");
@@ -126,8 +130,12 @@
       }, 500);
     }
 
-    document.addEventListener("touchstart", (e) => { if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); handleTap(); }, { passive: false });
-    document.addEventListener("mousedown", (e) => { if(e.target.tagName !== 'A') handleTap(); });
+    // イベント登録を確実に
+    document.addEventListener("mousedown", handleTap);
+    document.addEventListener("touchstart", (e) => {
+      if(e.cancelable) e.preventDefault();
+      handleTap();
+    }, { passive: false });
   </script>
 </body>
 </html>
