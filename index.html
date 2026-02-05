@@ -53,12 +53,11 @@
     <footer id="header-links">
       <a href="about.html">About</a>
       <a href="privacy.html">Privacy</a>
-      <a href="https://www.tiktok.com/">TikTok</a>
     </footer>
   </div>
 
   <script>
-    const LOCK_KEY = "void_ikiru_final";
+    const LOCK_KEY = "void_ikiru_final_clean";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null;
@@ -116,7 +115,6 @@
       const phil = document.getElementById("philosophy");
       finalScreen.style.display = "flex";
 
-      // 演出シーケンス
       setTimeout(() => {
         phil.style.opacity = "1";
         phil.innerHTML = "追いかけた数字は幻だった。<br><br>確かなのは<br>ここで過ごした1分間。<br><br>熱を失った画面。<br>二度と開かない、この場所。";
