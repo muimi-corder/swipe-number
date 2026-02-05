@@ -3,27 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Void Pulse</title>
+  <title>Tap to million.</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
     #container { height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
-
     #display-area { text-align: center; width: 100%; }
     #target-text { font-size: 14px; color: #ff3b30; font-weight: 900; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.8; }
     #number { font-size: 80px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
     #message { font-size: 13px; color: #444; font-weight: 900; height: 24px; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
-    
     #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: #ff3b30; width: 0%; z-index: 1000; }
-    
-    #final-screen { 
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; 
-      padding: 20px; text-align: center; box-sizing: border-box;
-    }
-    
+    #final-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; box-sizing: border-box; }
     #philosophy { font-size: 16px; line-height: 2.2; color: #777; font-weight: 300; letter-spacing: 0.1em; opacity: 0; transition: opacity 1.5s; }
     .ichie { color: #555; font-style: normal; }
-
     .tap-anim { animation: tap-pulse 0.06s cubic-bezier(0, 0, 0.2, 1); }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
   </style>
@@ -37,56 +28,48 @@
       <div id="message"></div>
     </div>
   </div>
-
-  <div id="final-screen">
-    <div id="philosophy"></div>
-  </div>
+  <div id="final-screen"><div id="philosophy"></div></div>
 
   <script>
-    const LOCK_KEY = "void_ikiru_ichie";
+    const userLang = navigator.language || navigator.userLanguage;
+    const isJapanese = userLang.includes('ja');
+
+    const i18n = {
+      ja: {
+        insults: ["進んでいる気がするだけだ", "数字は動く。意味は動かない", "電気信号の、静かな葬列", "熱はどこにも届かない", "ただ、時間が磨り減っている", "0と1の間に、価値は存在しない", "この振動に、出口はない"],
+        final: "あなたが見た数字は、幻だった。<br><br>ここで過ごした時間だけが、<br>そのまま残る。<br><br>この場所は、<br>もう開かない。",
+        ichie: "<br><br><br><span class='ichie'>一会あり<br>誰と儚く、<br>誰とはなく、</span>"
+      },
+      en: {
+        insults: ["Progress is an illusion.", "Numbers move. Meaning stays.", "A silent funeral of bits.", "The heat reaches nowhere.", "Time is merely grinding down.", "No value between 0 and 1.", "No exit from this pulse."],
+        final: "What you saw<br>was never the point.<br><br>Only the time<br>remains.<br><br>This place<br>will not open again.",
+        ichie: "<br><br><br><span class='ichie'>One meeting,<br>brief—<br><br>with someone,<br>or with no one.</span>"
+      }
+    };
+
+    const t = isJapanese ? i18n.ja : i18n.en;
+    const LOCK_KEY = "tap_to_million_final";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
-    let startTime = null;
-    let isFinished = false;
-    let tapCount = 0;
-    const DURATION = 60000; 
-    const MAX_VAL = 978412; 
-
-    const insults = [
-      "進んでいる気がするだけだ",
-      "数字は動く。意味は動かない",
-      "電気信号の、静かな葬列",
-      "熱はどこにも届かない",
-      "ただ、時間が磨り減っている",
-      "0と1の間に、価値は存在しない",
-      "この振動に、出口はない"
-    ];
+    let startTime = null, isFinished = false, tapCount = 0;
+    const DURATION = 60000, MAX_VAL = 978412;
 
     function update() {
       if (isFinished || !startTime) return;
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / DURATION, 1);
       document.getElementById("progress-bar").style.width = (progress * 100) + "%";
-      
-      const baseValue = MAX_VAL * Math.pow(progress, 0.75);
-      const bonusValue = tapCount * 2.5;
-      const displayValue = Math.floor(Math.min(baseValue + bonusValue, MAX_VAL));
+      const displayValue = Math.floor(Math.min((MAX_VAL * Math.pow(progress, 0.75)) + (tapCount * 2.5), MAX_VAL));
       document.getElementById("number").textContent = displayValue.toLocaleString();
-      
       if (progress >= 1) finish();
     }
 
     function handleTap() {
       if (isFinished) return;
       tapCount++;
-      if (!startTime) {
-        startTime = Date.now();
-        setInterval(update, 30);
-      }
+      if (!startTime) { startTime = Date.now(); setInterval(update, 30); }
       update();
-      if (Math.random() < 0.25) {
-        document.getElementById("message").textContent = insults[Math.floor(Math.random() * insults.length)];
-      }
+      if (Math.random() < 0.25) { document.getElementById("message").textContent = t.insults[Math.floor(Math.random() * t.insults.length)]; }
       const numEl = document.getElementById("number");
       numEl.classList.remove("tap-anim");
       void numEl.offsetWidth;
@@ -96,29 +79,17 @@
     function finish(alreadyLocked = false) {
       isFinished = true;
       if (!alreadyLocked) localStorage.setItem(LOCK_KEY, "true");
-      
-      const finalScreen = document.getElementById("final-screen");
+      document.getElementById("final-screen").style.display = "flex";
       const phil = document.getElementById("philosophy");
-      finalScreen.style.display = "flex";
-
       setTimeout(() => {
         phil.style.opacity = "1";
-        phil.innerHTML = "追いかけた数字は幻だった。<br><br>確かなのは<br>ここで過ごした1分間。<br><br>熱を失った画面。<br>二度と開かない、この場所。";
-        
-        // 「美しい虚無」を削除し、少し離して魂の三行を追加
-        setTimeout(() => {
-          phil.innerHTML += "<br><br><br><span class='ichie'>一会あり<br>誰と儚く、<br>誰とはなく、</span>";
-        }, 3000); // 3秒（一呼吸半）あけて表示
+        phil.innerHTML = t.final;
+        setTimeout(() => { phil.innerHTML += t.ichie; }, 3000);
       }, 500);
     }
 
-    document.addEventListener("touchstart", (e) => { 
-      if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); 
-      handleTap(); 
-    }, { passive: false });
-    document.addEventListener("mousedown", (e) => { 
-      if(e.target.tagName !== 'A') handleTap(); 
-    });
+    document.addEventListener("touchstart", (e) => { if(e.target.tagName !== 'A' && e.cancelable) e.preventDefault(); handleTap(); }, { passive: false });
+    document.addEventListener("mousedown", (e) => { if(e.target.tagName !== 'A') handleTap(); });
   </script>
 </body>
 </html>
