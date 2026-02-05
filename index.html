@@ -22,14 +22,7 @@
     }
     
     #philosophy { font-size: 16px; line-height: 2.2; color: #777; font-weight: 300; letter-spacing: 0.1em; opacity: 0; transition: opacity 1.5s; }
-    .highlight { color: #aaa; }
-    
-    #support-area { opacity: 0; transition: opacity 2s; margin-top: 50px; }
-    .donate-link { font-size: 10px; color: #333; text-decoration: none; letter-spacing: 0.05em; }
-    .donate-link:hover { color: #555; text-decoration: underline; }
-
-    footer#header-links { position: absolute; bottom: 20px; font-size: 10px; opacity: 0.1; }
-    #header-links a { color: #fff; text-decoration: none; margin: 0 10px; }
+    .ichie { color: #555; font-style: normal; }
 
     .tap-anim { animation: tap-pulse 0.06s cubic-bezier(0, 0, 0.2, 1); }
     @keyframes tap-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
@@ -47,17 +40,10 @@
 
   <div id="final-screen">
     <div id="philosophy"></div>
-    <div id="support-area">
-      <a href="https://www.buymeacoffee.com/muimi.ikiru" target="_blank" class="donate-link">支援は任意です</a>
-    </div>
-    <footer id="header-links">
-      <a href="about.html">About</a>
-      <a href="privacy.html">Privacy</a>
-    </footer>
   </div>
 
   <script>
-    const LOCK_KEY = "void_ikiru_final_clean";
+    const LOCK_KEY = "void_ikiru_ichie";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null;
@@ -119,15 +105,10 @@
         phil.style.opacity = "1";
         phil.innerHTML = "追いかけた数字は幻だった。<br><br>確かなのは<br>ここで過ごした1分間。<br><br>熱を失った画面。<br>二度と開かない、この場所。";
         
+        // 「美しい虚無」を削除し、少し離して魂の三行を追加
         setTimeout(() => {
-          phil.innerHTML += "<br><br><span class='highlight'>美しい虚無へ、ようこそ</span>";
-          
-          setTimeout(() => {
-            document.getElementById("support-area").style.opacity = "1";
-          }, 2000);
-          
-        }, 2500); 
-
+          phil.innerHTML += "<br><br><br><span class='ichie'>一会あり<br>誰と儚く、<br>誰とはなく、</span>";
+        }, 3000); // 3秒（一呼吸半）あけて表示
       }, 500);
     }
 
