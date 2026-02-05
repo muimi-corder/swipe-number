@@ -48,11 +48,44 @@
     };
 
     const t = isJapanese ? i18n.ja : i18n.en;
-    const LOCK_KEY = "tap_to_million_final";
+    const LOCK_KEY = "tap_to_million_ultimate";
     if (localStorage.getItem(LOCK_KEY)) { window.onload = () => finish(true); }
 
     let startTime = null, isFinished = false, tapCount = 0;
     const DURATION = 60000, MAX_VAL = 978412;
+
+    // --- Brown Noise Engine ---
+    let audioCtx, noiseNode, gainNode;
+    function startBrownNoise() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const bufferSize = 4096;
+      let lastOut = 0.0;
+      noiseNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      gainNode = audioCtx.createGain();
+      
+      noiseNode.onaudioprocess = (e) => {
+        const output = e.outputBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          output[i] = (lastOut + (0.02 * white)) / 1.02;
+          lastOut = output[i];
+          output[i] *= 4.0; 
+        }
+      };
+      
+      noiseNode.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1); // 叩いた瞬間にフェードイン
+    }
+
+    function stopBrownNoise() {
+      if (gainNode && audioCtx) {
+        // バツンと切らず、極めて短いフェードで「消失」を演出
+        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+        setTimeout(() => { audioCtx.close(); }, 100);
+      }
+    }
 
     function update() {
       if (isFinished || !startTime) return;
@@ -67,7 +100,11 @@
     function handleTap() {
       if (isFinished) return;
       tapCount++;
-      if (!startTime) { startTime = Date.now(); setInterval(update, 30); }
+      if (!startTime) { 
+        startTime = Date.now(); 
+        startBrownNoise();
+        setInterval(update, 30); 
+      }
       update();
       if (Math.random() < 0.25) { document.getElementById("message").textContent = t.insults[Math.floor(Math.random() * t.insults.length)]; }
       const numEl = document.getElementById("number");
@@ -78,6 +115,7 @@
 
     function finish(alreadyLocked = false) {
       isFinished = true;
+      stopBrownNoise(); // ここでノイズ停止
       if (!alreadyLocked) localStorage.setItem(LOCK_KEY, "true");
       document.getElementById("final-screen").style.display = "flex";
       const phil = document.getElementById("philosophy");
